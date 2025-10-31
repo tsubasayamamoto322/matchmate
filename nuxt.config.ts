@@ -8,8 +8,14 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/test-utils',
     '@nuxt/ui',
-    '@nuxtjs/supabase',
   ],
+  
+  vite: {
+    optimizeDeps: {
+      include: ['@supabase/supabase-js']
+    }
+  },
+  
   runtimeConfig: {
     // サーバーサイドでのみ利用するシークレット（例: サービスロールキーなど）
 

@@ -55,7 +55,7 @@ Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduct
 
 ## Setup
 
-Make sure to install dependencies:
+### 1. 依存関係のインストール
 
 ```bash
 # npm
