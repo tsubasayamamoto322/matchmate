@@ -8,10 +8,7 @@ export default defineNuxtConfig({
     '@nuxt/image',
     '@nuxt/test-utils',
     '@nuxt/ui',
-<<<<<<< HEAD
-=======
     '@nuxtjs/supabase',
->>>>>>> b3126ad (Initial commit)
   ],
   
   vite: {
@@ -19,29 +16,16 @@ export default defineNuxtConfig({
       include: ['@supabase/supabase-js']
     }
   },
-<<<<<<< HEAD
-  
-=======
   supabase: {
     redirect: false,
   },
 
->>>>>>> b3126ad (Initial commit)
   runtimeConfig: {
     // サーバーサイドでのみ利用するシークレット（例: サービスロールキーなど）
 
     public: {
-<<<<<<< HEAD
-      // フロントエンドにも公開する情報
-      // Supabaseモジュールが探す構造でURLとKeyを設定します。
-      supabase: {
-        url: process.env.SUPABASE_URL,
-        key: process.env.SUPABASE_ANON_KEY,
-      }
-=======
       supabaseUrl: process.env.SUPABASE_URL,
       supabaseKey: process.env.SUPABASE_KEY,
->>>>>>> b3126ad (Initial commit)
     }
   },
 })
