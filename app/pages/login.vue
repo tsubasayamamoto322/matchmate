@@ -32,7 +32,7 @@
             </label>
           </div>
           
-          <form @submit.prevent="consoleTest" style="display: flex; flex-direction: column; gap: 1rem;">
+          <form @submit.prevent="handleLogin" style="display: flex; flex-direction: column; gap: 1rem;">
             <div>
               <label for="email" style="display: block; font-size: 0.875rem; font-weight: 500; color: #333; margin-bottom: 0.25rem;">Email</label>
               <input 
@@ -87,15 +87,11 @@
     </div>
   </template>
   
-  <script setup lang="ts">
-  import { createClient } from "@supabase/supabase-js"
-import { ref } from 'vue';
+<script setup lang="ts"> 
+import { createClient } from '@supabase/supabase-js'
 const config = useRuntimeConfig()
-const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
-  
-const consoleTest = () => {
-    console.log("正常通りに動作")
-}
+const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
+
   const email = ref('')
   const password = ref('')
   const selectedRole = ref('player')
@@ -114,7 +110,6 @@ const consoleTest = () => {
     error.value = ''
     
     try {
-        debugger;
       const { data, error: loginError } = await supabase.auth.signInWithPassword({
         email: email.value,
         password: password.value,
