@@ -13,7 +13,10 @@ export default defineNuxtConfig({
   
   vite: {
     optimizeDeps: {
-      include: ['@supabase/supabase-js']
+      include: [
+        '@supabase/supabase-js',
+        '@auth/core'
+      ]
     }
   },
   supabase: {
