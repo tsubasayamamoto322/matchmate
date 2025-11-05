@@ -48,79 +48,10 @@
     - プロフィール設定
   - チーム詳細情報ページ
 
+#### 画面遷移・API設計
+![画面デザイン・遷移](https://github.com/user-attachments/assets/26252f2a-a10c-45f4-af16-8d46fdede4e5)
 
-# Nuxt Minimal Starter
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+#### テーブル設計・ER図
+![DB設計](https://github.com/user-attachments/assets/2b06089c-97b9-4f3e-84b3-d0dc4ee0fbc5)
 
-## Setup
-
-### 1. 依存関係のインストール
-
-```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
