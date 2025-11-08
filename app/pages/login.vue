@@ -152,7 +152,8 @@
 
 <script setup lang="ts"> 
 import { createClient } from '@supabase/supabase-js'
-const config = useRuntimeConfig()
+
+const config = useRuntimeConfig();
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
 
 const email = ref('')
@@ -167,7 +168,6 @@ const roles = [
 ]
 
 const handleLogin = async () => {
-  console.log("handleLoginが呼び出されました")
   loading.value = true
   error.value = ''
   
