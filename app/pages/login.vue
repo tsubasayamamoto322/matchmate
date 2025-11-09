@@ -152,7 +152,8 @@
 
 <script setup lang="ts"> 
 import { createClient } from '@supabase/supabase-js'
-const config = useRuntimeConfig()
+
+const config = useRuntimeConfig();
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
 
 const email = ref('')
@@ -167,7 +168,6 @@ const roles = [
 ]
 
 const handleLogin = async () => {
-  console.log("handleLoginが呼び出されました")
   loading.value = true
   error.value = ''
   
@@ -180,20 +180,13 @@ const handleLogin = async () => {
       error.value = loginError.message
       throw new Error('ログイン処理失敗')
     }
-    
-    if (data.user) {
-      if (selectedRole.value === 'player') {
-        await navigateTo('/player/top')
-      } else {
-        await navigateTo('/manager/top')
-      }
-    }
   } catch (err) {
     error.value = 'ログインに失敗しました'
     console.error('Login error:', err)
   } finally {
     loading.value = false
   }
+  await navigateTo({path: '/top'})
 }
 
 const handleForgotPassword = async () => {
