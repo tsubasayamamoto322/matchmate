@@ -1,6 +1,10 @@
 <template>
     <div>
-        {{ userTeams }}
+        <ul>
+            <li v-for="team in userJoinTeams.data" :key="team.id">
+              {{ team.team_name }}
+            </li>
+          </ul>
     </div>
 </template>
 <script setup>
@@ -15,7 +19,9 @@ if(await sessionFromUserData() == 'error') {
 }
 
 const teamsIds = await getJoinTeamsId(userData);
+
 const userJoinTeams = await getJoinTeams(teamsIds);
+console.log(userJoinTeams)
 async function sessionFromUserData() {
     try{
         const { data } = await supabase.auth.getUser();
@@ -35,8 +41,14 @@ async function getJoinTeamsId(userData) {
 }
 async function getJoinTeams(teamsIds) {
     if(teamsIds != undefined && teamsIds.error == null) {
-        // const teams = await supabase.from('teams').select().eq('id',teamsIds.id)
+        const arrTeamsIds = [];
         console.log(teamsIds)
+        teamsIds.data.forEach((teamsId) => {
+            arrTeamsIds.push(teamsId.team_id)
+        })
+        console.log(arrTeamsIds)
+        const teams = await supabase.from('teams').select().in('id',arrTeamsIds)
+        console.log(teams)
         return teams;
     }
 }
