@@ -186,7 +186,7 @@ const handleLogin = async () => {
   } finally {
     loading.value = false
   }
-  await navigateTo({path: '/top'})
+  await navigateTo({path: '/player_select'})
 }
 
 const handleForgotPassword = async () => {
