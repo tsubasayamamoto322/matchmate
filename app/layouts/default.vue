@@ -1,11 +1,27 @@
 <script setup lang="ts">
 // ロール情報を取得
-const { role, isPlayer, isManager, isLoggedIn, fetchUserRole } = useUserRole()
+const { role, isPlayer, isManager, isLoggedIn, fetchUserRole, logout } = useUserRole()
+
+// 現在のルートを取得
+const route = useRoute()
+
+// ページによって未ログイン時メニューを強制表示するかどうか
+const forceGuestMenu = computed(() => route.meta.forceGuestMenu === true)
+
+// 実際に表示するログイン状態（強制未ログイン表示の場合はfalse）
+const displayIsLoggedIn = computed(() => !forceGuestMenu.value && isLoggedIn.value)
 
 // 初期ロール情報を取得
 onMounted(async () => {
   await fetchUserRole()
 })
+
+// ログアウト処理
+const handleLogout = async () => {
+  if (confirm('ログアウトしますか？')) {
+    await logout()
+  }
+}
 </script>
 
 <template>
@@ -23,7 +39,7 @@ onMounted(async () => {
             </div>
             
             <!-- 未ログイン時：ログイン・新規登録ボタン -->
-            <div v-if="!isLoggedIn" class="flex gap-3">
+            <div v-if="!displayIsLoggedIn" class="flex gap-3">
               <NuxtLink to="/login" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
                 ログイン
               </NuxtLink>
@@ -42,6 +58,9 @@ onMounted(async () => {
                 <NuxtLink to="/player/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                   プロフィール
                 </NuxtLink>
+                <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                  ログアウト
+                </button>
               </template>
               
               <!-- 監督用メニュー -->
@@ -55,6 +74,9 @@ onMounted(async () => {
                 <NuxtLink to="/manager/players" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                   選手管理
                 </NuxtLink>
+                <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                  ログアウト
+                </button>
               </template>
             </nav>
           </div>

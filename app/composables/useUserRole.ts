@@ -78,6 +78,23 @@ export const useUserRole = () => {
   }
   
   /**
+   * ログアウト処理
+   */
+  const logout = async () => {
+    try {
+      const { error: logoutError } = await supabase.auth.signOut()
+      if (logoutError) {
+        console.error('Logout error:', logoutError)
+      }
+      clearCache()
+      // トップページにリダイレクト
+      await navigateTo('/')
+    } catch (err) {
+      console.error('Logout error:', err)
+    }
+  }
+  
+  /**
    * ユーザーが選手かどうか
    */
   const isPlayer = computed(() => userData.value?.role === 'player')
@@ -114,7 +131,8 @@ export const useUserRole = () => {
     loading: readonly(loading),
     error: readonly(error),
     fetchUserRole,
-    clearCache
+    clearCache,
+    logout
   }
 }
 

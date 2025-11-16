@@ -90,6 +90,11 @@
 <script setup lang="ts"> 
 import { createClient } from '@supabase/supabase-js'
 
+// このページでは未ログイン時メニューを強制表示
+definePageMeta({
+  forceGuestMenu: true
+})
+
 const config = useRuntimeConfig();
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
 

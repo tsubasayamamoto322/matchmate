@@ -76,5 +76,8 @@
 </template>
 
 <script setup>
-// Nuxt 3 Composition API
+// このページでは未ログイン時メニューを強制表示
+definePageMeta({
+  forceGuestMenu: true
+})
 </script>
