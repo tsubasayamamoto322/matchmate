@@ -80,7 +80,9 @@
           <div class="flex justify-between items-center mb-6">
             <div class="flex-1">
               <h2 class="text-gray-900 text-3xl font-bold mb-2">チームの選択</h2>
-              <p class="text-gray-700 text-sm">操作するチームを選択してください。</p>
+              <p class="text-gray-700 text-sm">
+                {{ isManager ? '管理しているチームを選択してください。' : '所属するチームを選択してください。' }}
+              </p>
             </div>
             
             <!-- 監督専用：チーム新規作成ボタン -->
@@ -131,63 +133,84 @@
     </div>
   </template>
   
-  <script setup lang="ts"> 
-  import { createClient } from '@supabase/supabase-js'
-  
-  // ロール情報を取得
-  const { isManager, fetchUserRole } = useUserRole()
-  
-  // 初期ロール情報を取得
-  onMounted(async () => {
-    await fetchUserRole()
-  })
-  
-  const config = useRuntimeConfig();
-  const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
-  
-  // ページ読み込み時にチームデータを取得
-  const userData = await sessionFromUserData();
-  if(userData == 'error') {
-      await navigateTo({path: "/error", query: {errorCode: '001'}})
+<script setup lang="ts"> 
+import { createClient } from '@supabase/supabase-js'
+import type { PostgrestSingleResponse } from '@supabase/supabase-js'
+
+// ロール情報を取得
+const { isManager, isPlayer, fetchUserRole, userData: userRoleData } = useUserRole()
+
+const config = useRuntimeConfig();
+const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
+
+// ページ読み込み時にチームデータを取得
+const userData = await sessionFromUserData();
+if(userData == 'error') {
+    await navigateTo({path: "/error", query: {errorCode: '001'}})
+}
+
+// ロール情報を取得
+await fetchUserRole()
+
+// ユーザーの役割に応じてチームを取得
+let userJoinTeams: any = { data: [] };
+if (userData !== 'error' && userData?.data?.id) {
+  if (isManager.value) {
+    // 監督の場合：teamsテーブルからmanager_idが自分のIDと一致するものを取得
+    userJoinTeams = await getManagerTeams(userData.data.id);
+  } else {
+    // 選手の場合：team_membersテーブルから参加しているチームを取得
+    const teamsIds = await getJoinTeamsId(userData);
+    userJoinTeams = await getJoinTeams(teamsIds);
   }
+}
+
+console.log(userJoinTeams)
+
+async function sessionFromUserData() {
+    try{
+        const { data } = await supabase.auth.getUser();
+        if (data.user != null) {
+            return await supabase.from("users").select().eq('id', data.user.id).single();
+        }
+    }catch(e){
+        return 'error'
+    }
+}
+
+// 監督用：自分が管理しているチームを取得
+async function getManagerTeams(managerId: string) {
+    const teams = await supabase
+      .from('teams')
+      .select()
+      .eq('manager_id', managerId)
+    return teams;
+}
+
+// 選手用：参加しているチームのIDを取得
+async function getJoinTeamsId(userData: any) {
+    if(userData != undefined && userData.error == null) {
+        const teams = await supabase.from('team_members').select().eq('player_id',userData.data.id)
+        return teams;
+    }
+}
+
+// 選手用：チームIDからチーム情報を取得
+async function getJoinTeams(teamsIds: any) {
+    if(teamsIds != undefined && teamsIds.error == null) {
+        const arrTeamsIds: string[] = [];
+        teamsIds.data.forEach((teamsId: any) => {
+            arrTeamsIds.push(teamsId.team_id)
+        })
+        const teams = await supabase.from('teams').select().in('id',arrTeamsIds)
+        return teams;
+    }
+}
   
-  const teamsIds = await getJoinTeamsId(userData);
-  const userJoinTeams = await getJoinTeams(teamsIds);
-  console.log(userJoinTeams)
-  
-  async function sessionFromUserData() {
-      try{
-          const { data } = await supabase.auth.getUser();
-          if (data.user != null) {
-              return await supabase.from("users").select().eq('id', data.user.id).single();
-          }
-      }catch(e){
-          return 'error'
-      }
-  }
-  
-  async function getJoinTeamsId(userData) {
-      if(userData != undefined && userData.error == null) {
-          const teams = await supabase.from('team_members').select().eq('player_id',userData.data.id)
-          return teams;
-      }
-  }
-  
-  async function getJoinTeams(teamsIds) {
-      if(teamsIds != undefined && teamsIds.error == null) {
-          const arrTeamsIds = [];
-          teamsIds.data.forEach((teamsId) => {
-              arrTeamsIds.push(teamsId.team_id)
-          })
-          const teams = await supabase.from('teams').select().in('id',arrTeamsIds)
-          return teams;
-      }
-  }
-  
-  const handleTeamSelect = async (team) => {
-    console.log('Selected team:', team)
-    await navigateTo({path: '/top'})
-  }
+const handleTeamSelect = async (team: any) => {
+  console.log('Selected team:', team)
+  await navigateTo({path: '/top'})
+}
   
   useHead({
     title: 'MatchMate - チーム選択',
