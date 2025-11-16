@@ -77,8 +77,24 @@
         </div>
   
         <div class="w-full max-w-2xl relative z-10">
-          <h2 class="text-gray-900 text-3xl font-bold mb-2 text-center">チームの選択</h2>
-          <p class="text-gray-700 text-sm mb-8 text-center">所属するチームを選択してください。</p>
+          <div class="flex justify-between items-center mb-6">
+            <div class="flex-1">
+              <h2 class="text-gray-900 text-3xl font-bold mb-2">チームの選択</h2>
+              <p class="text-gray-700 text-sm">所属するチームを選択してください。</p>
+            </div>
+            
+            <!-- 監督専用：チーム新規作成ボタン -->
+            <NuxtLink 
+              v-if="isManager" 
+              to="/manager/teams/create"
+              class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+              </svg>
+              チームを追加
+            </NuxtLink>
+          </div>
           
           <div class="space-y-4">
             <button
@@ -117,6 +133,14 @@
   
   <script setup lang="ts"> 
   import { createClient } from '@supabase/supabase-js'
+  
+  // ロール情報を取得
+  const { isManager, fetchUserRole } = useUserRole()
+  
+  // 初期ロール情報を取得
+  onMounted(async () => {
+    await fetchUserRole()
+  })
   
   const config = useRuntimeConfig();
   const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
