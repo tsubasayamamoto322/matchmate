@@ -80,7 +80,7 @@
           <div class="flex justify-between items-center mb-6">
             <div class="flex-1">
               <h2 class="text-gray-900 text-3xl font-bold mb-2">チームの選択</h2>
-              <p class="text-gray-700 text-sm">所属するチームを選択してください。</p>
+              <p class="text-gray-700 text-sm">操作するチームを選択してください。</p>
             </div>
             
             <!-- 監督専用：チーム新規作成ボタン -->
@@ -92,7 +92,7 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
               </svg>
-              チームを追加
+              チームを新規作成
             </NuxtLink>
           </div>
           
