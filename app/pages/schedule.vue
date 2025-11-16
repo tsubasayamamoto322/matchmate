@@ -83,7 +83,7 @@ const formatMatchDateTime = (match: Match): string => {
 </script>
 
 <template>
-  <div class="bg-gray-50 flex-1" style="background-color: #f0f8f7;">
+  <div class="flex-1">
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
       <h1 class="text-3xl font-bold text-gray-800 mb-6">スケジュール</h1>
       <div class="flex border-b border-gray-300 mb-8">

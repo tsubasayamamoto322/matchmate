@@ -3,7 +3,7 @@
     <!-- メインコンテンツ -->
     <main class="w-full px-4 sm:px-6 lg:px-8 py-16 h-150">
       <div class="max-w-7xl mx-auto">
-        <div class="relative w-full h-96 rounded-2xl overflow-hidden shadow-2xl">
+        <div class="relative w-full h-[600px] rounded-2xl overflow-hidden shadow-2xl">
           <!-- サッカーフィールドの背景 -->
           <div class="absolute inset-0 bg-gradient-to-b from-green-400 via-green-500 to-green-600">
             <!-- 芝生のストライプ -->
@@ -47,11 +47,6 @@
               >
                 MatchMate
               </h2>
-              <div class="inline-block bg-white bg-opacity-90 px-6 py-3 rounded-lg mb-8">
-                <p class="text-gray-900 text-lg font-medium">
-                  試合をつなげる
-                </p>
-              </div>
               <div>
                 <NuxtLink to="login" class="px-8 py-3 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-all hover:scale-105 shadow-xl">
                   ログイン画面へ

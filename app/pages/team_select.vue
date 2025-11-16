@@ -1,82 +1,8 @@
 <template>
-    <div class="bg-gradient-to-b from-lime-50 to-lime-100 flex flex-col flex-1">
-      <!-- メインコンテンツ -->
-      <main class="flex-1 p-8 flex items-center justify-center relative overflow-hidden">
-        <!-- サッカーフィールド背景 -->
-        <div class="absolute inset-0">
-          <!-- グラデーション背景 -->
-          <div class="absolute inset-0 bg-gradient-to-b from-emerald-400 via-green-500 to-green-600"></div>
-          
-          <!-- フィールドパターン -->
-          <div class="absolute inset-0 opacity-15">
-            <div class="absolute inset-0" style="background-image: repeating-linear-gradient(90deg, transparent, transparent 35px, rgba(255,255,255,0.1) 35px, rgba(255,255,255,0.1) 70px); background-size: 70px 70px;"></div>
-          </div>
-  
-          <!-- メインフィールド枠 -->
-          <div class="absolute inset-0 m-12 border-4 border-white rounded-3xl opacity-30"></div>
-  
-          <!-- センターライン -->
-          <div class="absolute top-0 bottom-0 left-1/2 w-1 bg-white opacity-40 transform -translate-x-1/2"></div>
-  
-          <!-- センターサークル -->
-          <div class="absolute top-1/2 left-1/2 w-32 h-32 border-4 border-white rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-40"></div>
-  
-          <!-- キックオフスポット -->
-          <div class="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full transform -translate-x-1/2 -translate-y-1/2 opacity-60"></div>
-  
-          <!-- 左ゴール -->
-          <div class="absolute top-1/2 left-12 w-2 h-20 border-4 border-white rounded-lg transform -translate-y-1/2 opacity-40"></div>
-          <div class="absolute top-1/2 left-20 w-6 h-32 border-4 border-white rounded-lg transform -translate-y-1/2 opacity-30"></div>
-  
-          <!-- 右ゴール -->
-          <div class="absolute top-1/2 right-12 w-2 h-20 border-4 border-white rounded-lg transform -translate-y-1/2 opacity-40"></div>
-          <div class="absolute top-1/2 right-20 w-6 h-32 border-4 border-white rounded-lg transform -translate-y-1/2 opacity-30"></div>
-  
-          <!-- 装飾的なサッカーボール -->
-          <div class="absolute top-20 right-20 text-6xl opacity-20 animate-pulse">⚽</div>
-          <div class="absolute bottom-32 left-16 text-8xl opacity-15 animate-bounce">⚽</div>
-          <div class="absolute top-1/3 left-1/4 text-7xl opacity-10">⚽</div>
-  
-          <!-- 選手アイコン装飾（白黒シルエット） -->
-          <!-- GK（ゴールキーパー） -->
-          <div class="absolute top-16 left-1/4 opacity-30 animate-bounce">
-            <svg class="w-16 h-16 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="3"></circle>
-              <rect x="11" y="10" width="2" height="8"></rect>
-              <rect x="6" y="13" width="3" height="5"></rect>
-              <rect x="15" y="13" width="3" height="5"></rect>
-            </svg>
-          </div>
-          <!-- DF（ディフェンダー） -->
-          <div class="absolute top-24 right-1/4 opacity-25 animate-pulse">
-            <svg class="w-14 h-14 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="3"></circle>
-              <rect x="11" y="10" width="2" height="8"></rect>
-              <rect x="4" y="12" width="3" height="6"></rect>
-              <rect x="17" y="12" width="3" height="6"></rect>
-            </svg>
-          </div>
-          <!-- MF（ミッドフィルダー） -->
-          <div class="absolute bottom-20 left-1/3 opacity-20">
-            <svg class="w-20 h-20 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="4" r="2.5"></circle>
-              <rect x="11" y="9" width="2" height="7"></rect>
-              <rect x="6" y="12" width="3" height="5"></rect>
-              <rect x="15" y="12" width="3" height="5"></rect>
-            </svg>
-          </div>
-          <!-- FW（フォワード） -->
-          <div class="absolute bottom-32 right-1/3 opacity-25 animate-bounce">
-            <svg class="w-16 h-16 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="3"></circle>
-              <rect x="11" y="10" width="2" height="8"></rect>
-              <rect x="7" y="13" width="3" height="5"></rect>
-              <rect x="14" y="13" width="3" height="5"></rect>
-            </svg>
-          </div>
-        </div>
-  
-        <div class="w-full max-w-2xl relative z-10">
+  <div class="flex flex-col flex-1">
+    <!-- メインコンテンツ -->
+    <main class="flex-1 p-8 flex items-center justify-center">
+      <div class="w-full max-w-2xl">
           <div class="flex justify-between items-center mb-6">
             <div class="flex-1">
               <h2 class="text-gray-900 text-3xl font-bold mb-2">チームの選択</h2>
@@ -128,10 +54,10 @@
               </div>
             </button>
           </div>
-        </div>
-      </main>
-    </div>
-  </template>
+      </div>
+    </main>
+  </div>
+</template>
   
 <script setup lang="ts"> 
 import { createClient } from '@supabase/supabase-js'
