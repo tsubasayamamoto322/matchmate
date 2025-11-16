@@ -1,28 +1,5 @@
 <template>
   <div class="bg-gradient-to-b from-yellow-50 to-green-100 flex-1">
-    <!-- ヘッダー -->
-    <header class="bg-white shadow-sm">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-        <div class="flex items-center gap-2">
-          <div class="w-8 h-8 bg-gray-900 rounded flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-            </svg>
-          </div>
-          <h1 class="text-2xl font-bold text-gray-900">MatchMate</h1>
-        </div>
-        
-        <div class="flex gap-3">
-          <NuxtLink to="login" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            ログイン
-          </NuxtLink>
-          <button class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
-            新規登録
-          </button>
-        </div>
-      </div>
-    </header>
-
     <!-- メインコンテンツ -->
     <main class="w-full px-4 sm:px-6 lg:px-8 py-16 h-150">
       <div class="max-w-7xl mx-auto">

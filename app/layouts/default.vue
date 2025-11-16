@@ -1,9 +1,65 @@
 <script setup lang="ts">
+// ロール情報を取得
+const { role, isPlayer, isManager, isLoggedIn, fetchUserRole } = useUserRole()
 
+// 初期ロール情報を取得
+onMounted(async () => {
+  await fetchUserRole()
+})
 </script>
 
 <template>
     <div class="min-h-screen flex flex-col">
+        <!-- ヘッダー -->
+        <header class="bg-white shadow-sm">
+          <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <div class="w-8 h-8 bg-gray-900 rounded flex items-center justify-center">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
+                </svg>
+              </div>
+              <NuxtLink to="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
+            </div>
+            
+            <!-- 未ログイン時：ログイン・新規登録ボタン -->
+            <div v-if="!isLoggedIn" class="flex gap-3">
+              <NuxtLink to="/login" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                ログイン
+              </NuxtLink>
+              <button class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                新規登録
+              </button>
+            </div>
+            
+            <!-- ログイン時：メニューバー（ロールに応じて表示） -->
+            <nav v-else class="flex items-center gap-4">
+              <!-- 選手用メニュー -->
+              <template v-if="isPlayer">
+                <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  スケジュール
+                </NuxtLink>
+                <NuxtLink to="/player/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  プロフィール
+                </NuxtLink>
+              </template>
+              
+              <!-- 監督用メニュー -->
+              <template v-else-if="isManager">
+                <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  スケジュール
+                </NuxtLink>
+                <NuxtLink to="/manager/teams" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  チーム管理
+                </NuxtLink>
+                <NuxtLink to="/manager/players" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  選手管理
+                </NuxtLink>
+              </template>
+            </nav>
+          </div>
+        </header>
+        
         <slot />
         
         <!-- フッター -->

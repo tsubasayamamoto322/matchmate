@@ -1,6 +1,14 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 
+// ロール情報を取得
+const { role, isPlayer, isManager, fetchUserRole } = useUserRole()
+
+// 初期ロール情報を取得
+onMounted(async () => {
+  await fetchUserRole()
+})
+
 // ===================================
 // 1. データ構造 (Gamesテーブルに基づく)
 // ===================================
@@ -76,24 +84,6 @@ const formatMatchDateTime = (match: Match): string => {
 
 <template>
   <div class="bg-gray-50 flex-1" style="background-color: #f0f8f7;">
-    
-    <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-      <div class="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between max-w-7xl">
-        <div class="text-xl font-bold text-gray-800">MatchMate</div>
-        <nav class="hidden md:flex space-x-8 text-sm font-medium">
-          <a href="#" class="text-gray-600 hover:text-gray-900">ホーム</a>
-          <a href="#" class="text-gray-900 font-bold border-b-2 border-current pb-1">スケジュール</a>
-          <a href="#" class="text-gray-600 hover:text-gray-900">テーマ</a>
-          <a href="#" class="text-gray-600 hover:text-gray-900">メンバー</a>
-        </nav>
-        <div class="flex items-center space-x-4">
-          <button class="text-gray-600 hover:text-gray-900"><svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9z"></path><path d="M13.73 21a2 2 0 01-3.46 0"></path></svg></button>
-          <div class="w-8 h-8 rounded-full overflow-hidden bg-gray-200">
-            </div>
-        </div>
-      </div>
-    </header>
-
     <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
       <h1 class="text-3xl font-bold text-gray-800 mb-6">スケジュール</h1>
       <div class="flex border-b border-gray-300 mb-8">
@@ -145,11 +135,29 @@ const formatMatchDateTime = (match: Match): string => {
                 </div>
               </div>
 
+              <!-- 選手用：出欠回答ボタン -->
               <button
+                v-if="isPlayer"
                 class="ml-4 px-3 py-1 text-sm text-blue-600 border border-blue-200 bg-blue-50 rounded-full hover:bg-blue-100 transition duration-150"
               >
                 {{ activeTab === 'future' ? '出欠席の回答' : '試合結果を見る' }}
               </button>
+              
+              <!-- 監督用：管理ボタン -->
+              <div v-else-if="isManager" class="ml-4 flex gap-2">
+                <button
+                  v-if="activeTab === 'future'"
+                  class="px-3 py-1 text-sm text-green-600 border border-green-200 bg-green-50 rounded-full hover:bg-green-100 transition duration-150"
+                >
+                  出欠状況を確認
+                </button>
+                <button
+                  v-else
+                  class="px-3 py-1 text-sm text-blue-600 border border-blue-200 bg-blue-50 rounded-full hover:bg-blue-100 transition duration-150"
+                >
+                  試合結果を入力
+                </button>
+              </div>
             </div>
           </template>
           <template v-else>
