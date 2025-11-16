@@ -75,7 +75,7 @@ const formatMatchDateTime = (match: Match): string => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-50" style="background-color: #f0f8f7;">
+  <div class="bg-gray-50 flex-1" style="background-color: #f0f8f7;">
     
     <header class="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
       <div class="container mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between max-w-7xl">
