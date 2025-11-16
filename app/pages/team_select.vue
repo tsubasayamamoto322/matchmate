@@ -108,7 +108,7 @@
               <div class="flex-shrink-0 relative">
                 <div class="w-32 h-32 bg-gradient-to-br from-green-300 to-green-600 rounded-lg overflow-hidden shadow-lg">
                   <img 
-                    src="https://via.placeholder.com/128x128?text=Team" 
+                    :src="team.team_logo_url || 'https://via.placeholder.com/128x128?text=Team'" 
                     :alt="team.team_name"
                     class="w-full h-full object-cover"
                   />
