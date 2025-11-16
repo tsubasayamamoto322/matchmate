@@ -123,7 +123,7 @@ const handleLogin = async () => {
   } finally {
     loading.value = false
   }
-  await navigateTo({path: '/player_select'})
+  await navigateTo({path: '/team_select'})
 }
 
 const handleForgotPassword = async () => {
