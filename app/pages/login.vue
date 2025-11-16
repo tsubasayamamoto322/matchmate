@@ -13,24 +13,6 @@
           <span>MatchMate</span>
         </div>
         
-        <div class="flex gap-2 mb-6 rounded-lg overflow-hidden bg-white p-1">
-          <label 
-            v-for="role in roles" 
-            :key="role.value"
-            class="flex-1 p-3 text-center cursor-pointer transition-all rounded-md relative"
-            :class="selectedRole === role.value ? 'bg-green-600 text-white' : 'text-gray-700'"
-            @click="selectedRole = role.value"
-          >
-            <input 
-              type="radio" 
-              :value="role.value" 
-              v-model="selectedRole"
-              class="absolute opacity-0 w-0 h-0"
-            />
-            {{ role.label }}
-          </label>
-        </div>
-        
         <form @submit.prevent="handleLogin" class="flex flex-col gap-4">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-800 mb-1">Email</label>
@@ -100,14 +82,8 @@ const supabase = createClient(config.public.supabaseUrl, config.public.supabaseK
 
 const email = ref('')
 const password = ref('')
-const selectedRole = ref('player')
 const loading = ref(false)
 const error = ref('')
-
-const roles = [
-  { value: 'player', label: '選手' },
-  { value: 'manager', label: '監督' }
-]
 
 const handleLogin = async () => {
   loading.value = true
