@@ -25,7 +25,6 @@
               required
             />
           </div>
-          
           <div>
             <label for="password" class="block text-sm font-medium text-gray-800 mb-1">Password</label>
             <input 
