@@ -5,7 +5,6 @@ import { ref, computed, onMounted } from 'vue';
 
 // ロール情報を取得
 const { role, isPlayer, isManager, fetchUserRole } = useUserRole()
-
 // 初期ロール情報を取得
 onMounted(async () => {
   await fetchUserRole()
@@ -71,6 +70,16 @@ const formatMatchDateTime = (match: Match): string => {
 
 //Supabaseから試合データをフェッチし、未来と過去に分類する関数
 const fetchMatches = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    const currentUserId = user.id;
+    const { data: teamMemberData, error: teamMemberError } = await supabase
+            .from('team_members')
+            .select('team_id')
+            .eq('player_id', currentUserId) // ログインユーザーIDで検索
+            .eq('status', 'approved') // 承認済試合に限定
+            .single();
+    const currentTeamId = teamMemberData.team_id;
+    console.log('id:',currentTeamId)
     // 現在時刻のDateオブジェクト
     const now = new Date(); 
     const todayDate = now.toISOString().substring(0, 10); // 今日の日付 'YYYY-MM-DD'
@@ -81,10 +90,9 @@ const fetchMatches = async () => {
     const { data, error } = await supabase
         .from('games')
         .select('*')
-        .gte('game_date', todayDate) // 今日、または今日より未来の日付を取得
-        .order('game_date', { ascending: true })
+        .eq('team_id', currentTeamId)
+        .gt('game_date', todayDate)
         .order('game_time', { ascending: true });
-
 
     if (error) {
         console.error('試合データフェッチエラー:', error);
@@ -107,13 +115,13 @@ const fetchMatches = async () => {
             past.push(match); // 今日の過去の試合
         }
     });
-
     // ----------------------------------------------------
     // 3. 過去の日付のデータを全て取得 (昨日の試合以前)
     // ----------------------------------------------------
     const { data: pastData, error: pastError } = await supabase
         .from('games')
         .select('*')
+        .eq('team_id', currentTeamId)
         .lt('game_date', todayDate) // 今日より過去の日付を取得
         .order('game_date', { ascending: false }) // 新しい順に降順ソート
         .order('game_time', { ascending: false });
