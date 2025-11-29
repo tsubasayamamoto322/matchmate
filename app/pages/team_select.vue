@@ -7,7 +7,7 @@
             <div class="flex-1">
               <h2 class="text-gray-900 text-3xl font-bold mb-2">チームの選択</h2>
               <p class="text-gray-700 text-sm">
-                {{ isManager ? '管理しているチームを選択してください。' : '所属するチームを選択してください。' }}
+                {{ isManager ? '管理するチームを選択してください。' : '所属するチームを選択してください。' }}
               </p>
             </div>
             
