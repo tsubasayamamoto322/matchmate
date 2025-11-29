@@ -7,7 +7,7 @@
                 <div class="mb-8">
                     <div class="flex justify-between items-center mb-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-gray-900">ようこそ、{{ userData?.data?.name }}さん</h1>
+                            <h1 class="text-3xl font-bold text-gray-900">ようこそ、{{ userData?.user_name || 'ゲスト' }}さん</h1>
                         </div>
                         <!-- 監督専用：試合作成ボタン -->
                         <NuxtLink v-if="isManager" to="/manager/games/create"
@@ -35,6 +35,7 @@
                                     <p class="text-sm text-gray-600 mt-2">{{ formatDate(nextMatch.game_date) }}（{{
                                         formatDayOfWeek(nextMatch.game_date) }}）・{{ formatTime(nextMatch.game_time) }}
                                     </p>
+                                    <p class="text-sm text-gray-500 mt-2">{{ nextMatch.location || '場所未定' }}</p>
                                 </div>
                                 <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
                                     <img v-if="nextMatch.opponent_logo" :src="nextMatch.opponent_logo" alt="対戦チーム"
@@ -49,7 +50,6 @@
                                     class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors">
                                     詳細を見る
                                 </NuxtLink>
-                                <p class="text-sm text-gray-500 mt-2">{{ nextMatch.location || '場所未定' }}</p>
                             </div>
                         </div>
                     </div>
@@ -136,6 +136,37 @@ const route = useRoute()
 
 const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
+
+// ユーザーデータ
+const userData = ref<any>(null)
+
+// ユーザー情報を取得
+const fetchUserData = async () => {
+    try {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
+
+        if (!authUser) {
+            return
+        }
+
+        const { data, error } = await supabase
+            .from('users')
+            .select('id, user_name')
+            .eq('id', authUser.id)
+            .single()
+
+        if (error) {
+            console.error('Error fetching user data:', error)
+            return
+        }
+
+        userData.value = data
+        console.log('User data:', data)
+    } catch (err) {
+        console.error('Error fetching user data:', err)
+    }
+}
+
 // データ型定義
 interface Match {
     id: string
@@ -213,6 +244,7 @@ const fetchMatches = async () => {
 // ページ読み込み時にデータを取得
 onMounted(async () => {
     await fetchUserRole()
+    await fetchUserData()
     await fetchMatches()
 })
 
