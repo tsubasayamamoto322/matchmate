@@ -125,7 +125,7 @@ const handleLogout = async () => {
               
               <!-- 監督用メニュー -->
               <template v-else-if="isManager">
-                <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                <NuxtLink :to="{ path: '/schedule', query: { team_id: route.query.team_id } }" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                   スケジュール
                 </NuxtLink>
                 <NuxtLink to="/manager/teams" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">

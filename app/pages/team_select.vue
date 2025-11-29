@@ -7,7 +7,7 @@
             <div class="flex-1">
               <h2 class="text-gray-900 text-3xl font-bold mb-2">チームの選択</h2>
               <p class="text-gray-700 text-sm">
-                {{ isManager ? '管理しているチームを選択してください。' : '所属するチームを選択してください。' }}
+                {{ isManager ? '管理するチームを選択してください。' : '所属するチームを選択してください。' }}
               </p>
             </div>
             
@@ -44,7 +44,7 @@
               <div class="flex-1 text-left flex flex-col justify-between">
                 <div>
                   <h3 class="text-xl font-bold text-gray-900 mb-2">{{ team.team_name }}</h3>
-                  <p class="text-gray-600 text-sm">チームのスケジュールと管理します。</p>
+                  <p class="text-gray-600 text-sm">{{ team.address }}</p>
                 </div>
                 <div class="flex gap-2 mt-4">
                   <button class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md">
@@ -134,8 +134,10 @@ async function getJoinTeams(teamsIds: any) {
 }
   
 const handleTeamSelect = async (team: any) => {
-  
-  await navigateTo({path: '/top'})
+  console.log('Selected team:', team)
+  await navigateTo({
+    path: '/team_top'
+  })
 }
   
   useHead({
