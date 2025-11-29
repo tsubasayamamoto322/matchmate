@@ -1,14 +1,11 @@
 <script setup lang="ts">
 import { createClient } from '@supabase/supabase-js'
 import type { PostgrestSingleResponse } from '@supabase/supabase-js'
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 
 // ロール情報を取得
 const { role, isPlayer, isManager, fetchUserRole } = useUserRole()
-// 初期ロール情報を取得
-onMounted(async () => {
-  await fetchUserRole()
-})
+const route = useRoute()
 const config = useRuntimeConfig();
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
@@ -70,16 +67,26 @@ const formatMatchDateTime = (match: Match): string => {
 
 //Supabaseから試合データをフェッチし、未来と過去に分類する関数
 const fetchMatches = async () => {
-  const { data: { user } } = await supabase.auth.getUser();
-  const currentUserId = user.id;
-  const { data: teamMemberData, error: teamMemberError } = await supabase
-    .from('team_members')
-    .select('team_id')
-    .eq('player_id', currentUserId) // ログインユーザーIDで検索
-    .eq('status', 'approved') // 承認済試合に限定
-    .single();
-  const currentTeamId = teamMemberData.team_id;
-  console.log('id:', currentTeamId)
+  // URLクエリから team_id を取得、なければ認証ユーザーのチームを使用
+  let currentTeamId = route.query.team_id as string;
+  
+  if (!currentTeamId) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const currentUserId = user.id;
+      const { data: teamMemberData, error: teamMemberError } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('player_id', currentUserId) // ログインユーザーIDで検索
+        .eq('status', 'approved') // 承認済試合に限定
+        .single();
+      if (teamMemberData) {
+        currentTeamId = teamMemberData.team_id;
+      }
+    }
+  }
+  
+  console.log('Team ID:', currentTeamId)
   // 現在時刻のDateオブジェクト
   const now = new Date();
   const todayDate = now.toISOString().substring(0, 10); // 今日の日付 'YYYY-MM-DD'
@@ -91,7 +98,8 @@ const fetchMatches = async () => {
     .from('games')
     .select('*')
     .eq('team_id', currentTeamId)
-    .gt('game_date', todayDate)
+    .gte('game_date', todayDate)
+    .order('game_date', { ascending: false })
     .order('game_time', { ascending: true });
 
   if (error) {
@@ -123,20 +131,27 @@ const fetchMatches = async () => {
     .select('*')
     .eq('team_id', currentTeamId)
     .lt('game_date', todayDate) // 今日より過去の日付を取得
-    .order('game_date', { ascending: false }) // 新しい順に降順ソート
-    .order('game_time', { ascending: false });
+    .order('game_date', { ascending: true }) // 古い順に昇順ソート
+    .order('game_time', { ascending: true });
 
   if (pastError) {
     console.error('過去の試合データフェッチエラー:', pastError);
     return;
   }
 
-  // 最終的な過去の試合リストを生成・ソート
+  // 最終的な過去の試合リストを生成・ソート（最新から古い順）
   const finalPastMatches = (pastData as Match[]).concat(past);
   finalPastMatches.sort((a, b) => {
     const dateA = new Date(`${a.game_date}T${a.game_time}`);
     const dateB = new Date(`${b.game_date}T${b.game_time}`);
     return dateB.getTime() - dateA.getTime();
+  });
+
+  // 未来の試合もソート（最新から古い順）
+  future.sort((a, b) => {
+    const dateA = new Date(`${a.game_date}T${a.game_time}`);
+    const dateB = new Date(`${b.game_date}T${b.game_time}`);
+    return dateA.getTime() - dateB.getTime();
   });
 
   // reactiveな変数に代入
@@ -148,6 +163,11 @@ const fetchMatches = async () => {
 // 初期ロール情報を取得し、試合データをフェッチ
 onMounted(async () => {
   await fetchUserRole()
+  await fetchMatches()
+})
+
+// ルートクエリの変更を監視して再フェッチ
+watch(() => route.query.team_id, async () => {
   await fetchMatches()
 })
 </script>
@@ -169,66 +189,70 @@ onMounted(async () => {
              
       </div>
 
-            <div>
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">
-                    {{ activeTab === 'future' ? '今後の試合' : '過去の試合' }}
-                  </h2>
+            <div>
+                <h2 class="text-xl font-semibold text-gray-700 mb-6">
+                    {{ activeTab === 'future' ? '今後の試合' : '過去の試合' }}
+                </h2>
 
-                <div class="bg-white rounded-lg shadow-md divide-y divide-gray-100">
-                    <template v-if="currentMatches.length">
-            <div v-for="match in currentMatches" :key="match.id"
-              class="flex items-center p-3 border-b border-gray-200 last:border-b-0">
-              <div class="w-12 h-12 flex-shrink-0 mr-4 rounded-lg overflow-hidden">
-                <div class="w-full h-full bg-gray-300 flex items-center justify-center">
+                <div class="space-y-4">
+                    <template v-if="currentMatches.length">
+                        <div v-for="match in currentMatches" :key="match.id"
+                            class="bg-white rounded-xl shadow-lg p-6 flex items-center gap-4 hover:shadow-xl transition-shadow">
+                            <!-- チームロゴ -->
+                            <div class="flex-shrink-0">
+                                <div class="w-20 h-20 bg-gradient-to-br from-blue-300 to-blue-600 rounded-lg overflow-hidden flex items-center justify-center shadow-md">
+                                    <svg class="w-10 h-10 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M10 2a8 8 0 100 16 8 8 0 000-16z"/>
+                                    </svg>
+                                </div>
+                            </div>
+
+                            <!-- 試合情報 -->
+                            <div class="flex-grow">
+                                <div class="flex items-baseline gap-2 mb-1">
+                                    <span class="text-sm font-medium text-gray-500">対戦相手</span>
+                                    <h3 class="text-lg font-bold text-gray-900">{{ match.opponent_team }}</h3>
+                                </div>
+                                <div class="text-sm text-gray-600 mb-2">
+                                    {{ formatMatchDateTime(match) }}
+                                </div>
+                                <div v-if="match.location" class="text-sm text-gray-500">
+                                    📍 {{ match.location }}
+                                </div>
+                                <div v-if="match.notes" class="text-sm text-gray-500 italic mt-1">
+                                    {{ match.notes }}
+                                </div>
+                            </div>
+
+                            <!-- アクションボタン -->
+                            <div class="flex-shrink-0">
+                                <button v-if="isPlayer"
+                                    class="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                    {{ activeTab === 'future' ? '出欠席の回答' : '試合結果を見る' }}
+                                </button>
+                                <div v-else-if="isManager" class="flex gap-2">
+                                    <button v-if="activeTab === 'future'"
+                                        class="px-4 py-2 text-sm font-medium text-green-600 border-2 border-green-200 bg-green-50 rounded-lg hover:bg-green-100 transition-colors">
+                                        出欠状況を確認
+                                    </button>
+                                    <button v-else
+                                        class="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
+                                        試合結果を入力
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <template v-else>
+                        <div class="p-8 text-center bg-gray-50 rounded-lg">
+                            <p class="text-gray-600">
+                                {{ activeTab === 'future' ? '今後の試合の予定はありません。' : '過去の試合情報はありません。' }}
+                            </p>
+                        </div>
+                    </template>
                 </div>
-              </div>
-
-              <div class="flex-grow">
-                                <div class="text-sm font-semibold text-gray-800">
-                                    試合名 <span class="font-normal text-gray-600">対戦相手: **{{ match.opponent_team
-                    }}**</span>
-                                  </div>
-
-                                <div class="text-xs text-gray-500 mt-0.5">
-                                    **{{ formatMatchDateTime(match) }}**
-                                  </div>
-
-                                <div v-if="match.location" class="text-xs text-gray-500">
-                                    場所: {{ match.location }}
-                                  </div>
-
-                                <div v-if="match.notes" class="text-xs text-gray-500 italic">
-                                    備考: {{ match.notes }}
-                                  </div>
-              </div>
-              <button v-if="isPlayer"
-                class="ml-4 px-3 py-1 text-sm text-blue-600 border border-blue-200 bg-blue-50 rounded-full hover:bg-blue-100 transition duration-150">
-                {{ activeTab === 'future' ? '出欠席の回答' : '試合結果を見る' }}
-              </button>
-                           
-                                          <div v-else-if="isManager" class="ml-4 flex gap-2">
-                <button v-if="activeTab === 'future'"
-                  class="px-3 py-1 text-sm text-green-600 border border-green-200 bg-green-50 rounded-full hover:bg-green-100 transition duration-150">
-                  出欠状況を確認
-                </button>
-                <button v-else
-                  class="px-3 py-1 text-sm text-blue-600 border border-blue-200 bg-blue-50 rounded-full hover:bg-blue-100 transition duration-150">
-                  試合結果を入力
-                </button>
-                             
-              </div>
-                         
             </div>
-                     
-          </template>
-                   
-                              <template v-else>
-                        <p class="p-4 text-gray-600">
-                            {{ activeTab === 'future' ? '今後の試合の予定はありません。' : '過去の試合情報はありません。' }}
-                          </p>
-                      </template>
-                  </div>
-              </div>
-          </div>
-      </div>
+        </div>
+    </div>
 </template>

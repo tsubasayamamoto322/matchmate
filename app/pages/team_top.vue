@@ -31,7 +31,7 @@
                             <div class="flex items-center gap-6">
                                 <div class="text-center">
                                     <p class="text-sm text-gray-500 mb-1">次の試合</p>
-                                    <h3 class="text-2xl font-bold text-gray-900">{{ nextMatch.opponent_team }}</h3>
+                                    <h3 class="text-2xl font-bold text-gray-900">vs {{ nextMatch.opponent_team }}</h3>
                                     <p class="text-sm text-gray-600 mt-2">{{ formatDate(nextMatch.game_date) }}（{{
                                         formatDayOfWeek(nextMatch.game_date) }}）・{{ formatTime(nextMatch.game_time) }}
                                     </p>
@@ -60,9 +60,10 @@
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold text-gray-900">直近の試合</h3>
                         <div class="flex gap-2">
-                            <button class="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
-                                詳細を表示
-                            </button>
+                            <NuxtLink :to="{ path: '/schedule', query: { team_id: route.query.team_id } }"
+                                class="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors">
+                                すべての試合を表示する
+                            </NuxtLink>
                         </div>
                     </div>
 
