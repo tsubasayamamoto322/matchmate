@@ -7,7 +7,7 @@
                 <div class="mb-8">
                     <div class="flex justify-between items-center mb-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-gray-900">お帰りなさい、アレックス！</h1>
+                            <h1 class="text-3xl font-bold text-gray-900">ようこそ、{{ userData?.data?.name }}さん</h1>
                         </div>
                         <!-- 監督専用：試合作成ボタン -->
                         <NuxtLink v-if="isManager" to="/manager/games/create"
@@ -58,7 +58,7 @@
                 <!-- 出席セクション（試合表示の例） -->
                 <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
                     <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-900">出席</h3>
+                        <h3 class="text-lg font-bold text-gray-900">直近の試合</h3>
                         <div class="flex gap-2">
                             <button class="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg">
                                 詳細を表示
@@ -131,52 +131,90 @@ import { createClient } from '@supabase/supabase-js'
 
 // ロール情報を取得
 const { isManager, isPlayer, fetchUserRole } = useUserRole()
+const route = useRoute()
 
-// 初期ロール情報を取得
-onMounted(async () => {
-    await fetchUserRole()
-})
 
 const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
+// データ型定義
+interface Match {
+    id: string
+    team_id: string
+    game_date: string
+    game_time?: string | null
+    opponent_team: string
+    location?: string | null
+    created_at?: string
+    updated_at?: string
+    opponent_logo?: string | null
+    attendance_status?: string
+}
 
-// ダミーデータ（後でデータベースから取得）
-const nextMatch = ref({
-    id: '1',
-    opponent_team: 'サッカーゲーム vs. ダイタンズ',
-    game_date: '2025-07-20',
-    game_time: '13:00:00',
-    location: '午後2時00分',
-    attendance_status: 'pending',
-    opponent_logo: null as string | null
-})
+const nextMatch = ref<Match | null>(null)
+const upcomingMatches = ref<Match[]>([])
+const loading = ref(false)
+const error = ref<string | null>(null)
 
-const upcomingMatches = ref([
-    {
-        id: '1',
-        opponent_team: 'サッカーゲーム vs. ダイタンズ',
-        game_date: '2025-07-20',
-        game_time: '14:00:00',
-        location: null,
-        attendance_status: 'confirmed'
-    },
-    {
-        id: '2',
-        opponent_team: 'バスケットボールゲーム vs. イーグルス',
-        game_date: '2024-07-27',
-        game_time: '16:00:00',
-        location: null,
-        attendance_status: 'pending'
-    },
-    {
-        id: '3',
-        opponent_team: 'バレーボールゲーム vs. シャークス',
-        game_date: '2024-08-03',
-        game_time: '16:00:00',
-        location: null,
-        attendance_status: 'confirmed'
+// Supabaseからデータを取得
+const fetchMatches = async () => {
+    loading.value = true
+    error.value = null
+
+    try {
+        // team_idを取得（URLクエリまたはセッションから）
+        const teamId = route.query.team_id as string
+        console.log('Route query:', route.query)
+        console.log('Team ID:', teamId)
+
+        if (!teamId) {
+            error.value = 'チームが選択されていません'
+            console.error('Team ID is missing')
+            return
+        }
+
+        // 現在の日付を取得
+        const now = new Date()
+        const todayDate = now.toISOString().substring(0, 10)
+
+        // 本日以降の試合をすべて取得
+        const { data: allMatches, error: fetchError } = await supabase
+            .from('games')
+            .select('*')
+            .eq('team_id', teamId)
+            .gte('game_date', todayDate)
+            .order('game_date', { ascending: true })
+            .order('game_time', { ascending: true })
+
+        console.log('Fetch error:', fetchError)
+        console.log('All matches:', allMatches)
+
+        if (fetchError) {
+            throw new Error(fetchError.message)
+        }
+
+        const matches = (allMatches || []) as Match[]
+        console.log('Matches count:', matches.length)
+
+        // 一番近い試合を nextMatch に設定
+        if (matches.length > 0) {
+            nextMatch.value = matches[0] as Match
+
+            // 次に近い3つの試合を upcomingMatches に設定
+            upcomingMatches.value = matches.slice(1, 4) as Match[]
+        }
+    } catch (err) {
+        error.value = err instanceof Error ? err.message : 'データ取得に失敗しました'
+        console.error('Error fetching matches:', err)
+    } finally {
+        loading.value = false
     }
-])
+}
+
+// ページ読み込み時にデータを取得
+onMounted(async () => {
+    await fetchUserRole()
+    await fetchMatches()
+})
 
 // 日付フォーマット
 const formatDate = (dateString: string) => {
@@ -192,7 +230,7 @@ const formatDayOfWeek = (dateString: string) => {
 }
 
 // 時刻フォーマット
-const formatTime = (timeString?: string) => {
+const formatTime = (timeString?: string | null) => {
     if (!timeString) return '時刻未定'
     const [hours, minutes = '00'] = timeString.split(':')
     const hour = parseInt(hours || '0')
@@ -202,7 +240,8 @@ const formatTime = (timeString?: string) => {
 }
 
 // ステータスのクラス
-const getStatusClass = (status: string) => {
+const getStatusClass = (status?: string) => {
+    if (!status) return 'bg-gray-100 text-gray-700'
     switch (status) {
         case 'confirmed':
             return 'bg-green-100 text-green-700'
@@ -216,7 +255,8 @@ const getStatusClass = (status: string) => {
 }
 
 // ステータステキスト
-const getStatusText = (status: string) => {
+const getStatusText = (status?: string) => {
+    if (!status) return '未定'
     switch (status) {
         case 'confirmed':
             return '確認済み'

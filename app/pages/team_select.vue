@@ -135,7 +135,10 @@ async function getJoinTeams(teamsIds: any) {
   
 const handleTeamSelect = async (team: any) => {
   console.log('Selected team:', team)
-  await navigateTo({path: '/team_top'})
+  await navigateTo({
+    path: '/team_top',
+    query: { team_id: team.id }
+  })
 }
   
   useHead({
