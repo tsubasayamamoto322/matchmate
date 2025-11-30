@@ -60,7 +60,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-lg font-bold text-gray-900">直近の試合</h3>
                         <div class="flex gap-2">
-                            <NuxtLink :to="{ path: '/schedule', query: { team_id: route.query.team_id } }"
+                            <NuxtLink to="/schedule"
                                 class="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors">
                                 すべての試合を表示する
                             </NuxtLink>
@@ -101,7 +101,7 @@
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">クイックアクション</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <NuxtLink :to="{ path: '/team_info', query: { team_id: route.query.team_id } }"
+                        <NuxtLink to="/team_info"
                             class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all text-center">
                             <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
@@ -132,6 +132,7 @@ import { createClient } from '@supabase/supabase-js'
 
 // ロール情報を取得
 const { isManager, isPlayer, fetchUserRole } = useUserRole()
+const { getTeamId } = useTeamSession()
 const route = useRoute()
 
 
@@ -193,16 +194,9 @@ const fetchMatches = async () => {
     error.value = null
 
     try {
-        // team_idを取得（URLクエリまたはセッションから）
-        const teamId = route.query.team_id as string
-        console.log('Route query:', route.query)
-        console.log('Team ID:', teamId)
-
-        if (!teamId) {
-            error.value = 'チームが選択されていません'
-            console.error('Team ID is missing')
-            return
-        }
+        // セッションからチームIDを取得
+        const teamId = await getTeamId()
+        console.log('Team ID from session:', teamId)        
 
         // 現在の日付を取得
         const now = new Date()

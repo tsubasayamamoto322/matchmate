@@ -28,7 +28,7 @@
             <button
               v-for="team in userJoinTeams.data"
               :key="team.id"
-              @click="handleTeamSelect(team)"
+              @click="selectTeam(team)"
               class="w-full bg-white rounded-xl shadow-xl p-6 flex gap-4 hover:shadow-2xl hover:scale-102 transition-all transform duration-200 border-2 border-transparent hover:border-green-400"
             >
               <div class="flex-shrink-0 relative">
@@ -136,8 +136,7 @@ async function getJoinTeams(teamsIds: any) {
 const handleTeamSelect = async (team: any) => {
   console.log('Selected team:', team)
   await navigateTo({
-    path: '/team_top',
-    query: { team_id: team.id }
+    path: '/team_top'
   })
 }
   
@@ -147,4 +146,29 @@ const handleTeamSelect = async (team: any) => {
       { name: 'description', content: 'MatchMateチーム選択' }
     ]
   })
+  const { setTeamId } = useTeamSession()
+
+const selectTeam = async (team: any) => {
+    const user = await sessionFromUserData();
+    console.log(user)
+  try {
+    
+    if (!user) {
+      throw new Error('ユーザー認証エラー')
+    }
+
+    // セッションにチーム情報を保存
+    const success = await setTeamId(team.id)
+    if (!success) {
+      throw new Error('チーム情報のセッション保存に失敗しました')
+    }
+
+    console.log('Team ID saved to session:', team.id)
+    await navigateTo("/team_top")
+
+  } catch (err) {
+    console.error('チーム選択エラー:', err)
+    throw new Error('チーム選択処理でエラーが発生しました')
+  }
+}
   </script>
