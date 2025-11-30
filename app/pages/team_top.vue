@@ -10,7 +10,7 @@
                             <h1 class="text-3xl font-bold text-gray-900">ようこそ、{{ userData?.user_name || 'ゲスト' }}さん</h1>
                         </div>
                         <!-- 監督専用：試合作成ボタン -->
-                        <NuxtLink :to="{ path: '/team_create', query: { team_id: route.query.team_id } }"
+                        <NuxtLink v-if="isManager" to="/manager/games/game_create"
                             class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -95,15 +95,25 @@ const handleLogin = async () => {
     })
     if (loginError) {
       error.value = loginError.message
-      throw new Error('ログイン処理失敗')
+      console.error('Login error:', loginError)
+      loading.value = false
+      return
     }
+
+    if (!data?.user) {
+      error.value = 'ログインに失敗しました'
+      console.error('No user data returned')
+      loading.value = false
+      return
+    }
+
+    // ログイン成功時のみ遷移
+    await navigateTo({path: '/team_select'})
   } catch (err) {
     error.value = 'ログインに失敗しました'
     console.error('Login error:', err)
-  } finally {
     loading.value = false
   }
-  await navigateTo({path: '/team_select'})
 }
 
 const handleForgotPassword = async () => {
