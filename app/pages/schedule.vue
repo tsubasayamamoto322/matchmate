@@ -213,7 +213,7 @@ onMounted(async () => {
                                     {{ formatMatchDateTime(match) }}
                                 </div>
                                 <div v-if="match.location" class="text-sm text-gray-500">
-                                    📍 {{ match.location }}
+                                    {{ match.location }}
                                 </div>
                                 <div v-if="match.notes" class="text-sm text-gray-500 italic mt-1">
                                     {{ match.notes }}
