@@ -74,7 +74,7 @@ const registerGame = async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-gray-100 p-4 sm:p-8">
+  <div class="min-h-screen p-4 sm:p-8">
     <div class="max-w-xl mx-auto bg-white p-6 sm:p-8 rounded-lg shadow-xl">
       <h2 class="text-2xl font-bold mb-6">試合を依頼</h2>
 
