@@ -5,7 +5,7 @@
       <div class="w-full max-w-2xl">
                 <!-- ヘッダー -->
                 <div class="mb-6">
-                    <NuxtLink :to="isEditMode ? { path: '/team_info', query: { team_id: route.query.team_id } } : '/team_select'"
+                    <NuxtLink :to="isEditMode ? '/team_info' : '/team_select'"
                         class="inline-flex items-center text-sm text-white hover:text-gray-100 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -109,14 +109,14 @@ definePageMeta({
 const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 const router = useRouter()
-const route = useRoute()
+const { getTeamId } = useTeamSession()
 
 // ユーザー情報を取得
 const { userData, fetchUserRole } = useUserRole()
 
-// 編集モードかどうか
-const isEditMode = computed(() => !!route.query.team_id)
-const currentTeamId = computed(() => route.query.team_id as string)
+// 編集モード判定
+const isEditMode = ref(false)
+const currentTeamId = ref<string | null>(null)
 
 // フォームデータ
 const formData = ref({
@@ -133,6 +133,18 @@ const existingLogoUrl = ref<string | null>(null)
 
 // 既存のチームデータを取得（編集モードの場合）
 const fetchExistingTeamData = async () => {
+    // ページのパス名で編集モードかどうかを判定
+    // URLに /manager/teams/edit?team_id=xxx のような形式で来た場合は編集モード
+    // または、セッションにチームIDがある場合も編集の準備（URLパラメータで指定される想定）
+    const router = useRouter()
+    const path = router.currentRoute.value.path
+    
+    if (path.includes('edit') && currentTeamId.value) {
+        isEditMode.value = true
+    } else if (path.includes('create')) {
+        isEditMode.value = false
+    }
+
     if (!isEditMode.value || !currentTeamId.value) return
 
     try {
@@ -168,6 +180,14 @@ const fetchExistingTeamData = async () => {
 // 初期化
 onMounted(async () => {
     await fetchUserRole()
+    
+    // セッションからチームIDを取得（編集モード用）
+    const teamIdFromSession = await getTeamId()
+    if (teamIdFromSession) {
+        currentTeamId.value = teamIdFromSession
+        isEditMode.value = true
+    }
+    
     await fetchExistingTeamData()
 })
 
@@ -267,10 +287,7 @@ const handleSubmit = async () => {
             }
 
             // 成功：チーム情報画面に戻る
-            await router.push({
-                path: '/team_info',
-                query: { team_id: currentTeamId.value }
-            })
+            await router.push('/team_info')
         } else {
             // 新規作成モード
             const { data: teamData, error: insertError } = await supabase

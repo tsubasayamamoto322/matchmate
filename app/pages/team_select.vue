@@ -146,7 +146,9 @@ const handleTeamSelect = async (team: any) => {
       { name: 'description', content: 'MatchMateチーム選択' }
     ]
   })
-  const selectTeam = async (team) => {
+  const { setTeamId } = useTeamSession()
+
+const selectTeam = async (team: any) => {
     const user = await sessionFromUserData();
     console.log(user)
   try {
@@ -155,20 +157,18 @@ const handleTeamSelect = async (team: any) => {
       throw new Error('ユーザー認証エラー')
     }
 
-    // セッションストレージにチーム情報を保存
-    const sessionData = {
-      data:{
-        teamId: team.id
-      }
+    // セッションにチーム情報を保存
+    const success = await setTeamId(team.id)
+    if (!success) {
+      throw new Error('チーム情報のセッション保存に失敗しました')
     }
 
-    const error = await supabase.auth.updateUser(sessionData)
-    console.log(error)
-    await navigateTo("/top")
+    console.log('Team ID saved to session:', team.id)
+    await navigateTo("/team_top")
 
   } catch (err) {
     console.error('チーム選択エラー:', err)
-    err.value = 'チーム選択処理でエラーが発生しました'
+    throw new Error('チーム選択処理でエラーが発生しました')
   }
 }
   </script>

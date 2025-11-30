@@ -5,7 +5,7 @@
             <div class="max-w-6xl mx-auto">
                 <!-- ヘッダー -->
                 <div class="mb-6">
-                    <NuxtLink :to="{ path: '/team_top', query: { team_id: route.query.team_id } }"
+                    <NuxtLink to="/team_top"
                         class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -20,7 +20,7 @@
                         <h1 class="text-3xl font-bold text-gray-900">チーム詳細</h1>
                         <!-- 監督専用：編集ボタン -->
                         <NuxtLink v-if="isManager && canEdit"
-                            :to="{ path: '/manager/teams/create', query: { team_id: route.query.team_id } }"
+                            to="/manager/teams/create"
                             class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -108,9 +108,9 @@
 <script setup lang="ts">
 import { createClient } from '@supabase/supabase-js'
 
-const route = useRoute()
 const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
+const { getTeamId } = useTeamSession()
 
 // ロール情報を取得
 const { isManager, fetchUserRole, userData: currentUser } = useUserRole()
@@ -124,7 +124,7 @@ const canEdit = ref(false)
 
 // チーム情報を取得
 const fetchTeamData = async () => {
-    const teamId = route.query.team_id as string
+    const teamId = await getTeamId()
     
     if (!teamId) {
         console.error('Team ID is missing')
