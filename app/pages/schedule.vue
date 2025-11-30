@@ -35,7 +35,10 @@ const pastMatches = ref<Match[]>([]);
 // ===================================
 // 2. ロジック (タブ切り替えと日時整形)
 // ===================================
-const activeTab = ref<"future" | "past">("future");
+const route = useRoute()
+const activeTab = ref<"future" | "past">(
+  route.query.show === 'past' ? 'past' : 'future'
+);
 const activeTabClass =
   "bg-white border-b-2 border-blue-500 font-semibold text-gray-800";
 const inactiveTabClass =
