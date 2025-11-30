@@ -5,7 +5,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 
 // ロール情報を取得
 const { role, isPlayer, isManager, fetchUserRole } = useUserRole()
-const route = useRoute()
+const { getTeamId } = useTeamSession()
 const config = useRuntimeConfig();
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
@@ -67,10 +67,11 @@ const formatMatchDateTime = (match: Match): string => {
 
 //Supabaseから試合データをフェッチし、未来と過去に分類する関数
 const fetchMatches = async () => {
-  // URLクエリから team_id を取得、なければ認証ユーザーのチームを使用
-  let currentTeamId = route.query.team_id as string;
+  // セッションからチームIDを取得
+  let currentTeamId = await getTeamId();
   
   if (!currentTeamId) {
+    // セッションにない場合はユーザーのチームを使用
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       const currentUserId = user.id;
@@ -163,11 +164,6 @@ const fetchMatches = async () => {
 // 初期ロール情報を取得し、試合データをフェッチ
 onMounted(async () => {
   await fetchUserRole()
-  await fetchMatches()
-})
-
-// ルートクエリの変更を監視して再フェッチ
-watch(() => route.query.team_id, async () => {
   await fetchMatches()
 })
 </script>
