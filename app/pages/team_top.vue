@@ -101,7 +101,7 @@
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">クイックアクション</h3>
                     <div class="grid grid-cols-2 gap-4">
-                        <NuxtLink to="/team/members"
+                        <NuxtLink :to="{ path: '/team_info', query: { team_id: route.query.team_id } }"
                             class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all text-center">
                             <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
