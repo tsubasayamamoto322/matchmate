@@ -5,15 +5,15 @@
       <div class="w-full max-w-2xl">
                 <!-- ヘッダー -->
                 <div class="mb-6">
-                    <NuxtLink to="/team_select"
+                    <NuxtLink :to="isEditMode ? { path: '/team_info', query: { team_id: route.query.team_id } } : '/team_select'"
                         class="inline-flex items-center text-sm text-white hover:text-gray-100 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
                         </svg>
-                        チーム選択に戻る
+                        {{ isEditMode ? 'チーム情報に戻る' : 'チーム選択に戻る' }}
                     </NuxtLink>
-                    <h1 class="text-3xl font-bold text-gray-900">新規チーム作成</h1>
-                    <p class="text-gray-700 mt-2">チーム情報を入力してください</p>
+                    <h1 class="text-3xl font-bold text-gray-900">{{ isEditMode ? 'チーム情報編集' : '新規チーム作成' }}</h1>
+                    <p class="text-gray-700 mt-2">{{ isEditMode ? 'チーム情報を編集してください' : 'チーム情報を入力してください' }}</p>
                 </div>
 
                 <!-- フォーム -->
@@ -88,7 +88,7 @@
                             </button>
                             <button type="submit" :disabled="loading || !formData.teamName"
                                 class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
-                                {{ loading ? '作成中...' : 'チームを作成' }}
+                                {{ loading ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'チーム情報を更新' : 'チームを作成') }}
                             </button>
                         </div>
                     </form>
@@ -109,14 +109,14 @@ definePageMeta({
 const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 const router = useRouter()
+const route = useRoute()
 
 // ユーザー情報を取得
 const { userData, fetchUserRole } = useUserRole()
 
-// 初期化
-onMounted(async () => {
-    await fetchUserRole()
-})
+// 編集モードかどうか
+const isEditMode = computed(() => !!route.query.team_id)
+const currentTeamId = computed(() => route.query.team_id as string)
 
 // フォームデータ
 const formData = ref({
@@ -129,6 +129,47 @@ const logoPreview = ref<string | null>(null)
 const loading = ref(false)
 const error = ref('')
 const fileInput = ref<HTMLInputElement | null>(null)
+const existingLogoUrl = ref<string | null>(null)
+
+// 既存のチームデータを取得（編集モードの場合）
+const fetchExistingTeamData = async () => {
+    if (!isEditMode.value || !currentTeamId.value) return
+
+    try {
+        const { data: team, error: fetchError } = await supabase
+            .from('teams')
+            .select('*')
+            .eq('id', currentTeamId.value)
+            .single()
+
+        if (fetchError) {
+            console.error('Error fetching team:', fetchError)
+            error.value = 'チーム情報の取得に失敗しました'
+            return
+        }
+
+        if (team) {
+            // フォームに既存データを設定
+            formData.value.teamName = team.team_name || ''
+            formData.value.location = team.address || ''
+            existingLogoUrl.value = team.team_logo_url
+            
+            // プレビューに既存のロゴを表示
+            if (team.team_logo_url) {
+                logoPreview.value = team.team_logo_url
+            }
+        }
+    } catch (err) {
+        console.error('Error:', err)
+        error.value = 'チーム情報の取得中にエラーが発生しました'
+    }
+}
+
+// 初期化
+onMounted(async () => {
+    await fetchUserRole()
+    await fetchExistingTeamData()
+})
 
 // ファイル選択処理
 const handleFileChange = (event: Event) => {
@@ -165,6 +206,7 @@ const handleFileChange = (event: Event) => {
 const clearLogo = () => {
     formData.value.logoFile = null
     logoPreview.value = null
+    existingLogoUrl.value = null
     if (fileInput.value) {
         fileInput.value.value = ''
     }
@@ -181,9 +223,9 @@ const handleSubmit = async () => {
     error.value = ''
 
     try {
-        let logoUrl = null
+        let logoUrl = existingLogoUrl.value
 
-        // ロゴアップロード処理
+        // ロゴアップロード処理（新しいファイルが選択された場合のみ）
         if (formData.value.logoFile) {
             const fileExt = formData.value.logoFile.name.split('.').pop()
             const fileName = `${userData.value.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
@@ -206,38 +248,63 @@ const handleSubmit = async () => {
             logoUrl = urlData.publicUrl
         }
 
-        // チーム作成
-        const { data: teamData, error: insertError } = await supabase
-            .from('teams')
-            .insert({
-                team_name: formData.value.teamName,
-                address: formData.value.location || null,
-                team_logo_url: logoUrl,
-                manager_id: userData.value.id,
+        if (isEditMode.value) {
+            // 編集モード：既存チームを更新
+            const { error: updateError } = await supabase
+                .from('teams')
+                .update({
+                    team_name: formData.value.teamName,
+                    address: formData.value.location || null,
+                    team_logo_url: logoUrl,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', currentTeamId.value)
+
+            if (updateError) {
+                console.error('Update error:', updateError)
+                error.value = 'チーム情報の更新に失敗しました'
+                return
+            }
+
+            // 成功：チーム情報画面に戻る
+            await router.push({
+                path: '/team_info',
+                query: { team_id: currentTeamId.value }
             })
-            .select()
-            .single()
+        } else {
+            // 新規作成モード
+            const { data: teamData, error: insertError } = await supabase
+                .from('teams')
+                .insert({
+                    team_name: formData.value.teamName,
+                    address: formData.value.location || null,
+                    team_logo_url: logoUrl,
+                    manager_id: userData.value.id,
+                })
+                .select()
+                .single()
 
-        if (insertError) {
-            console.error('Insert error:', insertError)
-            error.value = 'チームの作成に失敗しました'
-            return
+            if (insertError) {
+                console.error('Insert error:', insertError)
+                error.value = 'チームの作成に失敗しました'
+                return
+            }
+
+            // 成功：チーム選択画面に戻る
+            await router.push('/team_select')
         }
-
-        // 成功：チーム選択画面に戻る
-        await router.push('/team_select')
     } catch (err) {
         console.error('Error:', err)
-        error.value = 'チームの作成中にエラーが発生しました'
+        error.value = isEditMode.value ? 'チーム情報の更新中にエラーが発生しました' : 'チームの作成中にエラーが発生しました'
     } finally {
         loading.value = false
     }
 }
 
 useHead({
-    title: 'MatchMate - チーム作成',
+    title: computed(() => isEditMode.value ? 'MatchMate - チーム編集' : 'MatchMate - チーム作成'),
     meta: [
-        { name: 'description', content: '新しいチームを作成' }
+        { name: 'description', content: computed(() => isEditMode.value ? 'チーム情報を編集' : '新しいチームを作成') }
     ]
 })
 </script>
