@@ -373,23 +373,39 @@ const saveProfile = async () => {
 
         // 1. メールアドレスが変更されている場合、Supabase認証情報を更新
         if (editFormData.value.email !== userData.value.email) {
-            const { error: emailError } = await supabase.auth.updateUser({
-                email: editFormData.value.email
-            })
+            try {
+                const { data: authData, error: emailError } = await supabase.auth.updateUser({
+                    email: editFormData.value.email
+                })
 
-            if (emailError) {
-                console.error('Email update error:', emailError)
-                editError.value = `メールアドレスの更新に失敗しました: ${emailError.message}`
+                if (emailError) {
+                    console.error('Email update error:', emailError)
+                    editError.value = `メールアドレスの更新に失敗しました: ${emailError.message}`
+                    return
+                }
+
+                console.log('Auth email updated:', authData)
+
+                // メールアドレス変更時のユーザーへの通知
+                alert('メールアドレスが変更されました。\n確認メールが新しいメールアドレスに送信されています。\n確認後、新しいメールアドレスで再度ログインしてください。')
+            } catch (err) {
+                console.error('Email update exception:', err)
+                editError.value = 'メールアドレスの更新に失敗しました'
                 return
             }
         }
 
         // 2. usersテーブルを更新
+        // 注：メール変更時はAuthenticationの確認メール後に自動更新される
+        // ここでは最新のAuthenticationメールアドレスを取得して使用
+        const { data: { user: updatedAuthUser } } = await supabase.auth.getUser()
+        const latestEmail = updatedAuthUser?.email || editFormData.value.email
+
         const { error: updateError } = await supabase
             .from('users')
             .update({
                 user_name: editFormData.value.user_name,
-                email: editFormData.value.email,
+                email: latestEmail,
                 avatar_url: avatarUrl,
                 updated_at: new Date().toISOString()
             })
