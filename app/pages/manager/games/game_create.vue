@@ -37,6 +37,11 @@ interface Game {
     team_id: string
 }
 
+interface AttendanceInsert {
+    game_id: string 
+    player_id: string 
+    status: string 
+}
 // -----------------------------------------------------
 // 3. 試合登録 (Supabase INSERT) メソッド
 // -----------------------------------------------------
@@ -80,17 +85,41 @@ const registerGame = async () => {
     };
 
     try {
-        const { data, error } = await (supabase
+        const { data: insertedGame, error: gameError } = await supabase
             .from('games')
-            .insert([insertData]) as any)
+            .insert([insertData])
+            .select('id')
+            .single() as PostgrestSingleResponse<{ id: number }>;
 
-        if (error) {
-            throw error;
+        if (gameError) {
+            console.error('試合登録 (games) エラー:', gameError);
+            throw gameError;
         }
 
         // 成功時の処理
-        console.log('試合登録成功:', data);
-        alert('試合が正常に登録されました！');
+        const game_id = insertedGame.id;
+        console.log('試合登録成功(game_id):', game_id);
+
+        // team_membersテーブルから、該当チームの全メンバーのplayer_idを取得
+        const { data: playersData, error: playersError } = await supabase
+            .from('team_members')
+            .select('player_id')
+            .eq('team_id', team_id)
+
+        const attendanceInserts: AttendanceInsert[] = playersData.map(player => {
+            const status = (player.player_id === authUser.id) ? 'participate' : 'unanswered';
+            return {
+                game_id: game_id,
+                player_id: player.player_id,
+                status: status 
+            };
+        });
+
+        const { error: attendanceError } = await supabase
+                .from('attendances')
+                .insert(attendanceInserts);
+
+        alert('試合が正常に登録されました！メンバーに出欠回答依頼を送信しました。');
         // チームトップページに戻る
         await router.push('/team_top');
 
@@ -101,6 +130,8 @@ const registerGame = async () => {
         isLoading.value = false;
     }
 };
+
+
 </script>
 
 <template>
