@@ -192,8 +192,8 @@ const error = ref<string | null>(null)
 const fetchMatches = async () => {
     loading.value = true
     error.value = null
-
     try {
+        const { data: { user: authUser } } = await supabase.auth.getUser()
         // セッションからチームIDを取得
         const teamId = await getTeamId()
         console.log('Team ID from session:', teamId)        
@@ -205,8 +205,9 @@ const fetchMatches = async () => {
         // 本日以降の試合をすべて取得
         const { data: allMatches, error: fetchError } = await supabase
             .from('games')
-            .select('*')
+            .select('*,attendances!left(status)')
             .eq('team_id', teamId)
+            .eq('attendances.player_id',authUser.id)
             .gte('game_date', todayDate)
             .order('game_date', { ascending: true })
             .order('game_time', { ascending: true })
@@ -218,15 +219,28 @@ const fetchMatches = async () => {
             throw new Error(fetchError.message)
         }
 
-        const matches = (allMatches || []) as Match[]
-        console.log('Matches count:', matches.length)
+        const matchesWithStatus = (allMatches || []).map(match => {
+            const status = (match.attendances && 
+                            match.attendances.length > 0 && 
+                            match.attendances[0]?.status)
+                           ? match.attendances[0].status 
+                           : 'unanswered'; 
+            
+            const { attendance, ...rest } = match;
+
+            return {
+                ...rest, 
+                attendance_status: status as string
+            } as Match
+        })
+        console.log('Matches count:', matchesWithStatus.length)
 
         // 一番近い試合を nextMatch に設定
-        if (matches.length > 0) {
-            nextMatch.value = matches[0] as Match
+        if (matchesWithStatus.length > 0) {
+            nextMatch.value = matchesWithStatus[0]
 
             // 次に近い3つの試合を upcomingMatches に設定
-            upcomingMatches.value = matches.slice(1, 4) as Match[]
+            upcomingMatches.value = matchesWithStatus.slice(1, 4)
         }
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'データ取得に失敗しました'
@@ -270,11 +284,11 @@ const formatTime = (timeString?: string | null) => {
 const getStatusClass = (status?: string) => {
     if (!status) return 'bg-gray-100 text-gray-700'
     switch (status) {
-        case 'confirmed':
+        case 'participate':
             return 'bg-green-100 text-green-700'
-        case 'pending':
+        case 'unanswered':
             return 'bg-yellow-100 text-yellow-700'
-        case 'declined':
+        case 'absent':
             return 'bg-red-100 text-red-700'
         default:
             return 'bg-gray-100 text-gray-700'
@@ -283,16 +297,16 @@ const getStatusClass = (status?: string) => {
 
 // ステータステキスト
 const getStatusText = (status?: string) => {
-    if (!status) return '未定'
+    if (!status) return '未回答'
     switch (status) {
-        case 'confirmed':
-            return '確認済み'
-        case 'pending':
-            return '待機中'
-        case 'declined':
+        case 'participate':
+            return '出席'
+        case 'unanswered':
+            return '未回答'
+        case 'absent':
             return '欠席'
         default:
-            return '未定'
+            return '未回答'
     }
 }
 
