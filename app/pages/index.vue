@@ -52,9 +52,12 @@
               </div>
 
               <!-- ボタン -->
-              <div class="relative z-20">
-                <NuxtLink to="login" class="px-6 py-2.5 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-all hover:scale-105 shadow-lg text-sm">
+              <div class="relative z-20 flex flex-col gap-3">
+                <NuxtLink to="login" class="px-6 py-2.5 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-all hover:scale-105 shadow-lg text-sm text-center">
                   ログイン画面へ
+                </NuxtLink>
+                <NuxtLink to="register" class="px-6 py-2.5 bg-gray-700 text-white font-semibold rounded-full hover:bg-gray-800 transition-all hover:scale-105 shadow-lg text-sm text-center">
+                  新規登録
                 </NuxtLink>
               </div>
 
@@ -112,9 +115,12 @@
                 >
                   MatchMate
                 </h2>
-                <div>
+                <div class="flex flex-col gap-4">
                   <NuxtLink to="login" class="px-8 py-3 bg-white text-gray-900 font-semibold rounded-full hover:bg-gray-100 transition-all hover:scale-105 shadow-xl">
                     ログイン画面へ
+                  </NuxtLink>
+                  <NuxtLink to="register" class="px-8 py-3 bg-gray-700 text-white font-semibold rounded-full hover:bg-gray-800 transition-all hover:scale-105 shadow-xl">
+                    新規登録
                   </NuxtLink>
                 </div>
               </div>
