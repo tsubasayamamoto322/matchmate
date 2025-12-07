@@ -69,29 +69,48 @@ const { isManager, isPlayer, fetchUserRole, userData: userRoleData } = useUserRo
 const config = useRuntimeConfig();
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
 
-// ページ読み込み時にチームデータを取得
-const userData = await sessionFromUserData();
-if(userData == 'error') {
-    await navigateTo({path: "/error", query: {errorCode: '001'}})
-}
+// 初期状態
+const userJoinTeams = ref<any>({ data: [] })
+const isLoading = ref(true)
+const error = ref<string | null>(null)
 
-// ロール情報を取得
-await fetchUserRole()
+// 非同期処理を onMounted で実行
+onMounted(async () => {
+  try {
+    // ページ読み込み時にチームデータを取得
+    const userData = await sessionFromUserData();
+    if(userData == 'error') {
+        await navigateTo({path: "/error", query: {errorCode: '001'}})
+        return
+    }
 
-// ユーザーの役割に応じてチームを取得
-let userJoinTeams: any = { data: [] };
-if (userData !== 'error' && userData?.data?.id) {
-  if (isManager.value) {
-    // 監督の場合：teamsテーブルからmanager_idが自分のIDと一致するものを取得
-    userJoinTeams = await getManagerTeams(userData.data.id);
-  } else {
-    // 選手の場合：team_membersテーブルから参加しているチームを取得
-    const teamsIds = await getJoinTeamsId(userData);
-    userJoinTeams = await getJoinTeams(teamsIds);
+    // ロール情報を取得
+    await fetchUserRole()
+
+    // ユーザーの役割に応じてチームを取得
+    if (userData && userData !== 'error' && userData?.data?.id) {
+      if (isManager.value) {
+        // 監督の場合：teamsテーブルからmanager_idが自分のIDと一致するものを取得
+        const result = await getManagerTeams(userData.data.id);
+        userJoinTeams.value = result || { data: [] }
+      } else {
+        // 選手の場合：team_membersテーブルから参加しているチームを取得
+        const teamsIds = await getJoinTeamsId(userData);
+        if (teamsIds) {
+          const result = await getJoinTeams(teamsIds);
+          userJoinTeams.value = result || { data: [] }
+        }
+      }
+    }
+
+    console.log(userJoinTeams.value)
+  } catch (err) {
+    error.value = 'チーム情報の読み込みに失敗しました'
+    console.error('Error loading teams:', err)
+  } finally {
+    isLoading.value = false
   }
-}
-
-console.log(userJoinTeams)
+})
 
 async function sessionFromUserData() {
     try{
@@ -110,27 +129,29 @@ async function getManagerTeams(managerId: string) {
       .from('teams')
       .select()
       .eq('manager_id', managerId)
-    return teams;
+    return teams || { data: [] };
 }
 
 // 選手用：参加しているチームのIDを取得
 async function getJoinTeamsId(userData: any) {
     if(userData != undefined && userData.error == null) {
         const teams = await supabase.from('team_members').select().eq('player_id',userData.data.id)
-        return teams;
+        return teams || null; // 明示的に null を返す
     }
+    return null;
 }
 
 // 選手用：チームIDからチーム情報を取得
 async function getJoinTeams(teamsIds: any) {
-    if(teamsIds != undefined && teamsIds.error == null) {
+    if(teamsIds != undefined && teamsIds.error == null && teamsIds.data && teamsIds.data.length > 0) {
         const arrTeamsIds: string[] = [];
         teamsIds.data.forEach((teamsId: any) => {
             arrTeamsIds.push(teamsId.team_id)
         })
         const teams = await supabase.from('teams').select().in('id',arrTeamsIds)
-        return teams;
+        return teams || { data: [] };
     }
+    return { data: [] }; // チームがない場合は空配列を返す
 }
   
 const handleTeamSelect = async (team: any) => {

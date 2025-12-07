@@ -184,7 +184,12 @@ const fetchTeamData = async () => {
                 .select('id, user_name, avatar_url')
                 .in('id', playerIds)
 
-            if (playersData && !playersError) {
+            if (playersError) {
+                console.error('Error fetching players:', playersError)
+                return
+            }
+
+            if (playersData && Array.isArray(playersData) && playersData.length > 0) {
                 players.value = playersData
             }
         }

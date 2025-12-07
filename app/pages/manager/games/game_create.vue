@@ -38,7 +38,7 @@ interface Game {
 }
 
 interface AttendanceInsert {
-    game_id: string 
+    game_id: string | number
     player_id: string 
     status: string 
 }
@@ -106,14 +106,23 @@ const registerGame = async () => {
             .select('player_id')
             .eq('team_id', team_id)
 
-        const attendanceInserts: AttendanceInsert[] = playersData.map(player => {
-            const status = (player.player_id === authUser.id) ? 'participate' : 'unanswered';
-            return {
-                game_id: game_id,
-                player_id: player.player_id,
-                status: status 
-            };
-        });
+        if (playersError) {
+            console.error('Error fetching team members:', playersError)
+            errorMsg.value = 'チームメンバーの取得に失敗しました'
+            return
+        }
+
+        if (!playersData || !Array.isArray(playersData) || playersData.length === 0) {
+            console.warn('No team members found')
+            errorMsg.value = 'チームメンバーがいません'
+            return
+        }
+
+        const attendanceInserts: AttendanceInsert[] = playersData.map(player => ({
+            game_id: game_id as string | number,
+            player_id: player.player_id,
+            status: (player.player_id === authUser.id) ? 'participate' : 'unanswered'
+        }));
 
         const { error: attendanceError } = await supabase
                 .from('attendances')

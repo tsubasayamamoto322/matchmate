@@ -1,15 +1,16 @@
 import { createClient } from "@supabase/supabase-js";
 import { ref } from "vue";
 
-let sessionTeamId = ref<string | null>(null);
-let isInitialized = false;
-
 export const useTeamSession = () => {
     const config = useRuntimeConfig();
     const supabase = createClient(
         config.public.supabaseUrl,
         config.public.supabaseKey
     );
+
+    // インスタンスごとに独立した状態を保持
+    const sessionTeamId = ref<string | null>(null);
+    let isInitialized = false;
 
     /**
      * セッションからチームIDを取得

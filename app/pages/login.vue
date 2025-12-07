@@ -108,6 +108,8 @@ const handleLogin = async () => {
     }
 
     // ログイン成功時のみ遷移
+    // navigateTo は自動的にページ遷移するため loading.value は リセットされない可能性があるが、
+    // 通常はページ遷移により UI が失われるため問題にはならない
     await navigateTo({path: '/team_select'})
   } catch (err) {
     error.value = 'ログインに失敗しました'
