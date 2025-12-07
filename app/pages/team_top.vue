@@ -45,7 +45,21 @@
                                     </svg>
                                 </div>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right flex flex-col gap-3">
+                                <!-- 選手用：出欠ステータス表示 -->
+                                <div v-if="isPlayer">
+                                    <span class="px-3 py-1 text-sm rounded-full"
+                                        :class="getStatusClass(nextMatch.attendance_status)">
+                                        {{ getStatusText(nextMatch.attendance_status) }}
+                                    </span>
+                                </div>
+                                <!-- 監督用：未回答者ステータス表示 -->
+                                <div v-else-if="isManager">
+                                    <span class="px-3 py-1 text-sm rounded-full"
+                                        :class="nextMatch.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
+                                        {{ nextMatch.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
+                                    </span>
+                                </div>
                                 <NuxtLink :to="`/games/${nextMatch.id}`"
                                     class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors">
                                     詳細を見る
@@ -84,9 +98,15 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                <span class="px-3 py-1 text-sm rounded-full"
+                                <!-- 選手用：出欠ステータス表示 -->
+                                <span v-if="isPlayer" class="px-3 py-1 text-sm rounded-full"
                                     :class="getStatusClass(match.attendance_status)">
                                     {{ getStatusText(match.attendance_status) }}
+                                </span>
+                                <!-- 監督用：未回答者ステータス表示 -->
+                                <span v-else-if="isManager" class="px-3 py-1 text-sm rounded-full"
+                                    :class="match.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
+                                    {{ match.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
                                 </span>
                                 <NuxtLink :to="`/games/${match.id}`"
                                     class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
@@ -196,7 +216,6 @@ const fetchMatches = async () => {
         const { data: { user: authUser } } = await supabase.auth.getUser()
         // セッションからチームIDを取得
         const teamId = await getTeamId()
-        console.log('Team ID from session:', teamId)        
 
         // 現在の日付を取得
         const now = new Date()
@@ -208,45 +227,72 @@ const fetchMatches = async () => {
             return
         }
 
-        const { data: allMatches, error: fetchError } = await supabase
-            .from('games')
-            .select('*,attendances!left(status)')
-            .eq('team_id', teamId)
-            .eq('attendances.player_id', authUser.id)
-            .gte('game_date', todayDate)
-            .order('game_date', { ascending: true })
-            .order('game_time', { ascending: true })
+        // 選手の場合
+        if (isPlayer.value) {
+            const { data: allMatches, error: fetchError } = await supabase
+                .from('games')
+                .select('*,attendances!left(status)')
+                .eq('team_id', teamId)
+                .eq('attendances.player_id', authUser.id)
+                .gte('game_date', todayDate)
+                .order('game_date', { ascending: true })
+                .order('game_time', { ascending: true })
 
-        console.log('Fetch error:', fetchError)
-        console.log('All matches:', allMatches)
+            if (fetchError) {
+                throw new Error(fetchError.message)
+            }
 
-        if (fetchError) {
-            throw new Error(fetchError.message)
-        }
+            const matchesWithStatus = (allMatches || []).map(match => {
+                const status = (match.attendances && 
+                                match.attendances.length > 0 && 
+                                match.attendances[0]?.status)
+                               ? match.attendances[0].status 
+                               : 'unanswered'; 
+                
+                const { attendances, ...rest } = match;
 
-        const matchesWithStatus = (allMatches || []).map(match => {
-            const status = (match.attendances && 
-                            match.attendances.length > 0 && 
-                            match.attendances[0]?.status)
-                           ? match.attendances[0].status 
-                           : 'unanswered'; 
-            
-            // attendances プロパティを除外
-            const { attendances, ...rest } = match;
+                return {
+                    ...rest, 
+                    attendance_status: status as string
+                } as Match
+            })
 
-            return {
-                ...rest, 
-                attendance_status: status as string
-            } as Match
-        })
-        console.log('Matches count:', matchesWithStatus.length)
+            if (matchesWithStatus.length > 0) {
+                nextMatch.value = matchesWithStatus[0]
+                upcomingMatches.value = matchesWithStatus.slice(1, 4)
+            }
+        } else if (isManager.value) {
+            // 監督の場合：試合と全attendancesを取得
+            const { data: allMatches, error: fetchError } = await supabase
+                .from('games')
+                .select('*,attendances(status)')
+                .eq('team_id', teamId)
+                .gte('game_date', todayDate)
+                .order('game_date', { ascending: true })
+                .order('game_time', { ascending: true })
 
-        // 一番近い試合を nextMatch に設定
-        if (matchesWithStatus.length > 0) {
-            nextMatch.value = matchesWithStatus[0]
+            if (fetchError) {
+                throw new Error(fetchError.message)
+            }
 
-            // 次に近い3つの試合を upcomingMatches に設定
-            upcomingMatches.value = matchesWithStatus.slice(1, 4)
+            const matchesWithStatus = (allMatches || []).map(match => {
+                // 未回答者がいるかを判定
+                const hasUnanswered = (match.attendances || []).some(
+                    (att: any) => att.status === 'unanswered'
+                )
+                
+                const { attendances, ...rest } = match;
+
+                return {
+                    ...rest, 
+                    attendance_status: hasUnanswered ? 'unanswered' : 'answered'
+                } as Match
+            })
+
+            if (matchesWithStatus.length > 0) {
+                nextMatch.value = matchesWithStatus[0]
+                upcomingMatches.value = matchesWithStatus.slice(1, 4)
+            }
         }
     } catch (err) {
         error.value = err instanceof Error ? err.message : 'データ取得に失敗しました'
