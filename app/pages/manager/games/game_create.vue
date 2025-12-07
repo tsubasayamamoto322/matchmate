@@ -128,6 +128,12 @@ const registerGame = async () => {
                 .from('attendances')
                 .insert(attendanceInserts);
 
+        if (attendanceError) {
+            console.error('出欠情報登録 (attendances) エラー:', attendanceError);
+            throw attendanceError;
+        }
+
+        console.log('出欠情報登録成功:', attendanceInserts.length, '件');
         alert('試合が正常に登録されました！メンバーに出欠回答依頼を送信しました。');
         // チームトップページに戻る
         await router.push('/team_top');

@@ -198,59 +198,97 @@ const fetchMatch = async () => {
 const fetchAttendances = async () => {
     try {
         const { data: { user: authUser } } = await supabase.auth.getUser()
-        if (!authUser) return
+        if (!authUser || !match.value) return
 
         const matchId = route.params.id as string
 
-        // 全出欠情報を取得（leftで全attendancesレコードを取得、ユーザー情報がない場合も含める）
-        const { data: attendances, error: attendanceError } = await supabase
-            .from('attendances')
-            .select(`
-                player_id,
-                status,
-                users!left(id, user_name, avatar_url)
-            `)
-            .eq('game_id', matchId)
+        // 監督の場合
+        if (isManager.value) {
+            // チームのメンバーを全て取得
+            const { data: teamMembers, error: membersError } = await supabase
+                .from('team_members')
+                .select('player_id')
+                .eq('team_id', match.value.team_id)
+                .eq('status', 'approved')
 
-        if (attendanceError) {
-            console.error('Error fetching attendances:', attendanceError)
-            return
-        }
-
-        if (attendances) {
-            // 出欠情報を整形（ユーザー情報がない場合にフィルタリング）
-            let formatted = attendances
-                .filter((att: any) => att.users !== null) // ユーザー情報があるもののみ
-                .map((att: any) => ({
-                    player_id: att.player_id,
-                    status: att.status,
-                    user_name: att.users.user_name,
-                    avatar_url: att.users.avatar_url
-                }))
-
-            // 現在のユーザーの出欠を抽出
-            const myAtt = formatted.find((att: any) => att.player_id === authUser.id)
-            if (myAtt) {
-                myAttendance.value = myAtt.status
+            if (membersError || !teamMembers || teamMembers.length === 0) {
+                console.error('Error fetching team members:', membersError)
+                loading.value = false
+                return
             }
 
-            // 監督の場合、チームメンバーのみを表示するようにフィルタリング
-            if (isManager.value && match.value) {
-                const { data: teamMembers, error: membersError } = await supabase
-                    .from('team_members')
-                    .select('player_id')
-                    .eq('team_id', match.value.team_id)
-                    .eq('status', 'approved')
+            const memberIds = teamMembers.map((m: any) => m.player_id)
+            
+            // メンバーの出欠情報を取得
+            const { data: attendances, error: attendanceError } = await supabase
+                .from('attendances')
+                .select(`
+                    player_id,
+                    status,
+                    users!left(id, user_name, avatar_url)
+                `)
+                .eq('game_id', matchId)
+                .in('player_id', memberIds)
 
-                if (!membersError && teamMembers) {
-                    const memberIds = teamMembers.map((m: any) => m.player_id)
-                    // チームメンバーのみを表示
-                    formatted = formatted.filter((att: any) => memberIds.includes(att.player_id))
+            if (attendanceError) {
+                console.error('Error fetching attendances:', attendanceError)
+                loading.value = false
+                return
+            }
+
+            if (attendanceError) {
+                console.error('Error fetching attendances:', attendanceError)
+                loading.value = false
+                return
+            }
+
+            if (attendances && attendances.length > 0) {
+                const formatted = attendances
+                    .filter((att: any) => att.users !== null)
+                    .map((att: any) => ({
+                        player_id: att.player_id,
+                        status: att.status,
+                        user_name: att.users.user_name,
+                        avatar_url: att.users.avatar_url
+                    }))
+
+                attendanceList.value = formatted
+            }
+        } else {
+            // 選手の場合：通常の出欠情報取得
+            const { data: attendances, error: attendanceError } = await supabase
+                .from('attendances')
+                .select(`
+                    player_id,
+                    status,
+                    users!left(id, user_name, avatar_url)
+                `)
+                .eq('game_id', matchId)
+
+            if (attendanceError) {
+                console.error('Error fetching attendances:', attendanceError)
+                loading.value = false
+                return
+            }
+
+            if (attendances) {
+                const formatted = attendances
+                    .filter((att: any) => att.users !== null)
+                    .map((att: any) => ({
+                        player_id: att.player_id,
+                        status: att.status,
+                        user_name: att.users.user_name,
+                        avatar_url: att.users.avatar_url
+                    }))
+
+                // 現在のユーザーの出欠を抽出
+                const myAtt = formatted.find((att: any) => att.player_id === authUser.id)
+                if (myAtt) {
+                    myAttendance.value = myAtt.status
                 }
-            }
 
-            attendanceList.value = formatted
-            console.log('Attendances fetched:', formatted) // デバッグ用
+                attendanceList.value = formatted
+            }
         }
     } catch (err) {
         console.error('Error fetching attendances:', err)
