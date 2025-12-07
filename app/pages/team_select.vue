@@ -79,7 +79,9 @@ onMounted(async () => {
   try {
     // ページ読み込み時にチームデータを取得
     const userData = await sessionFromUserData();
-    if(userData == 'error') {
+    
+    // ユーザーデータが取得できない場合（null、undefined、'error'）はエラーページへ
+    if (!userData || userData === 'error' || !userData?.data?.id) {
         await navigateTo({path: "/error", query: {errorCode: '001'}})
         return
     }
@@ -88,18 +90,16 @@ onMounted(async () => {
     await fetchUserRole()
 
     // ユーザーの役割に応じてチームを取得
-    if (userData && userData !== 'error' && userData?.data?.id) {
-      if (isManager.value) {
-        // 監督の場合：teamsテーブルからmanager_idが自分のIDと一致するものを取得
-        const result = await getManagerTeams(userData.data.id);
+    if (isManager.value) {
+      // 監督の場合：teamsテーブルからmanager_idが自分のIDと一致するものを取得
+      const result = await getManagerTeams(userData.data.id);
+      userJoinTeams.value = result || { data: [] }
+    } else {
+      // 選手の場合：team_membersテーブルから参加しているチームを取得
+      const teamsIds = await getJoinTeamsId(userData);
+      if (teamsIds) {
+        const result = await getJoinTeams(teamsIds);
         userJoinTeams.value = result || { data: [] }
-      } else {
-        // 選手の場合：team_membersテーブルから参加しているチームを取得
-        const teamsIds = await getJoinTeamsId(userData);
-        if (teamsIds) {
-          const result = await getJoinTeams(teamsIds);
-          userJoinTeams.value = result || { data: [] }
-        }
       }
     }
 
@@ -112,13 +112,22 @@ onMounted(async () => {
   }
 })
 
+/**
+ * ユーザー認証情報とユーザーテーブルのデータを取得
+ * @returns Supabaseレスポンス | 'error' | null
+ */
 async function sessionFromUserData() {
     try{
         const { data } = await supabase.auth.getUser();
-        if (data.user != null) {
-            return await supabase.from("users").select().eq('id', data.user.id).single();
+        // ユーザーが認証されていない場合は明示的に null を返す
+        if (!data.user) {
+            console.warn('No authenticated user found');
+            return null;
         }
+        // ユーザーテーブルからデータを取得
+        return await supabase.from("users").select().eq('id', data.user.id).single();
     }catch(e){
+        console.error('Error fetching session data:', e);
         return 'error'
     }
 }
