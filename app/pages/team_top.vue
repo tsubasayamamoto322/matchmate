@@ -23,7 +23,7 @@
 
                 <!-- 今後の試合セクション -->
                 <div class="mb-8">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">今後の試合</h2>
+                    <!-- <h2 class="text-xl font-bold text-gray-900 mb-4">次の試合</h2> -->
 
                     <!-- 次の試合カード -->
                     <div v-if="nextMatch" class="bg-white rounded-xl shadow-lg p-6 mb-6">
@@ -183,7 +183,7 @@ interface Match {
     attendance_status?: string
 }
 
-const nextMatch = ref<Match | null>(null)
+const nextMatch = ref<Match | undefined>(undefined)
 const upcomingMatches = ref<Match[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
@@ -203,11 +203,16 @@ const fetchMatches = async () => {
         const todayDate = now.toISOString().substring(0, 10)
 
         // 本日以降の試合をすべて取得
+        if (!authUser) {
+            error.value = 'ユーザー認証情報が取得できません'
+            return
+        }
+
         const { data: allMatches, error: fetchError } = await supabase
             .from('games')
             .select('*,attendances!left(status)')
             .eq('team_id', teamId)
-            .eq('attendances.player_id',authUser.id)
+            .eq('attendances.player_id', authUser.id)
             .gte('game_date', todayDate)
             .order('game_date', { ascending: true })
             .order('game_time', { ascending: true })
@@ -226,7 +231,8 @@ const fetchMatches = async () => {
                            ? match.attendances[0].status 
                            : 'unanswered'; 
             
-            const { attendance, ...rest } = match;
+            // attendances プロパティを除外
+            const { attendances, ...rest } = match;
 
             return {
                 ...rest, 

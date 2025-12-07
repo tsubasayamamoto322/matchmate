@@ -111,7 +111,7 @@ export const useUserRole = () => {
   
   // 認証状態の変更を監視してキャッシュをクリア
   onMounted(() => {
-    supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearCache()
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
@@ -119,6 +119,11 @@ export const useUserRole = () => {
         clearCache()
         fetchUserRole()
       }
+    })
+    
+    // アンマウント時にリスナーを解除
+    onUnmounted(() => {
+      subscription?.unsubscribe()
     })
   })
   
