@@ -20,7 +20,7 @@
                         <h1 class="text-3xl font-bold text-gray-900">チーム詳細</h1>
                         <!-- 監督専用：編集ボタン -->
                         <NuxtLink v-if="isManager && canEdit"
-                            to="/manager/teams/create"
+                            to="/manager/teams/create?edit=true"
                             class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -184,7 +184,12 @@ const fetchTeamData = async () => {
                 .select('id, user_name, avatar_url')
                 .in('id', playerIds)
 
-            if (playersData && !playersError) {
+            if (playersError) {
+                console.error('Error fetching players:', playersError)
+                return
+            }
+
+            if (playersData && Array.isArray(playersData) && playersData.length > 0) {
                 players.value = playersData
             }
         }

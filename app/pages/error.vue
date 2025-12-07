@@ -104,17 +104,20 @@
 </template>
 
 <script setup>
-import { useRoute } from 'vue-router' // Nuxtは自動インポートしてくれることが多いですが、明示しても良い
-let errorContent = 'エラーが発生しました'
+import { useRoute } from 'vue-router'
+// 反応性を保つため ref で管理
+const errorContent = ref('エラーが発生しました')
 const route = useRoute() 
 const queryParam = route.query.errorCode
+
 useHead({
   title: 'エラー - MatchMate',
   meta: [
     { name: 'description', content: 'エラーが発生しました' }
   ]
 })
+
 if (queryParam == '001') {
-    errorContent = "セッションが切れました。再ログインが必要です。"
+    errorContent.value = "セッションが切れました。再ログインが必要です。"
 }
 </script>

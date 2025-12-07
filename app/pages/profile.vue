@@ -333,6 +333,7 @@ const saveProfile = async () => {
         let avatarUrl = editFormData.value.avatar_url
 
         // アバターがアップロードされた場合
+        // パス: team-logos/avatars/{user_id}/{timestamp}.{ext}
         if (editFormData.value.avatar_file) {
             const fileExt = editFormData.value.avatar_file.name.split('.').pop()
             const fileName = `avatars/${authUser.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
