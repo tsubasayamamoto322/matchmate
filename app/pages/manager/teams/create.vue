@@ -133,15 +133,12 @@ const existingLogoUrl = ref<string | null>(null)
 
 // 既存のチームデータを取得（編集モードの場合）
 const fetchExistingTeamData = async () => {
-    // ページのパス名で編集モードかどうかを判定
-    // URLに /manager/teams/edit?team_id=xxx のような形式で来た場合は編集モード
-    // または、セッションにチームIDがある場合も編集の準備（URLパラメータで指定される想定）
-    const router = useRouter()
-    const path = router.currentRoute.value.path
+    const route = useRoute()
     
-    if (path.includes('edit') && currentTeamId.value) {
+    // URLクエリパラメータで編集モードかどうかを判定
+    if (route.query.edit === 'true' && currentTeamId.value) {
         isEditMode.value = true
-    } else if (path.includes('create')) {
+    } else {
         isEditMode.value = false
     }
 
@@ -232,6 +229,53 @@ const clearLogo = () => {
     }
 }
 
+// Supabase URLからファイルパスを抽出
+const extractFilePathFromUrl = (url?: string): string | null => {
+    try {
+        if (!url) return null
+        
+        // URLの形式: https://xxxxx.supabase.co/storage/v1/object/public/team-logos/team-logos/{team_id}/{fileName}
+        if (url.includes('/object/public/team-logos/')) {
+            const parts = url.split('/object/public/team-logos/')
+            if (parts.length > 1 && parts[1]) {
+                return parts[1]
+            }
+        }
+        
+        // すでにパスの場合
+        if (url.includes('team-logos/')) {
+            return url
+        }
+        
+        return null
+    } catch (err) {
+        console.error('Error extracting file path:', err)
+        return null
+    }
+}
+
+// 旧ロゴを削除
+const deleteOldLogo = async (oldLogoUrl: string) => {
+    if (!oldLogoUrl) return
+    
+    try {
+        const oldFilePath = extractFilePathFromUrl(oldLogoUrl)
+        if (!oldFilePath) {
+            console.warn('Could not extract file path from old logo URL:', oldLogoUrl)
+            return
+        }
+        
+        await supabase.storage
+            .from('team-logos')
+            .remove([oldFilePath])
+        
+        console.log('Old logo deleted successfully:', oldFilePath)
+    } catch (err) {
+        console.warn('Failed to delete old logo:', err)
+        // 旧ロゴ削除エラーは無視して続行
+    }
+}
+
 // フォーム送信
 const handleSubmit = async () => {
     if (!userData.value?.id) {
@@ -248,7 +292,15 @@ const handleSubmit = async () => {
         // ロゴアップロード処理（新しいファイルが選択された場合のみ）
         if (formData.value.logoFile) {
             const fileExt = formData.value.logoFile.name.split('.').pop()
-            const fileName = `${userData.value.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+            
+            // 新規作成時と編集時でチームIDを処理
+            let teamIdForPath = currentTeamId.value
+            if (!teamIdForPath) {
+                // 新規作成時は一時的なIDを使用（後でデータベースに保存後に更新されることを想定）
+                teamIdForPath = `temp-${Date.now()}`
+            }
+            
+            const fileName = `team-logos/${teamIdForPath}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
             const { error: uploadError } = await supabase.storage
                 .from('team-logos')
@@ -266,6 +318,11 @@ const handleSubmit = async () => {
                 .getPublicUrl(fileName)
 
             logoUrl = urlData.publicUrl
+
+            // 旧ロゴがあれば削除
+            if (isEditMode.value && existingLogoUrl.value) {
+                await deleteOldLogo(existingLogoUrl.value)
+            }
         }
 
         if (isEditMode.value) {
@@ -290,21 +347,83 @@ const handleSubmit = async () => {
             await router.push('/team_info')
         } else {
             // 新規作成モード
-            const { data: teamData, error: insertError } = await supabase
-                .from('teams')
-                .insert({
-                    team_name: formData.value.teamName,
-                    address: formData.value.location || null,
-                    team_logo_url: logoUrl,
-                    manager_id: userData.value.id,
-                })
-                .select()
-                .single()
+            let finalLogoUrl = logoUrl
+            
+            // ロゴがアップロードされた場合、テンポラリーIDから本来のIDへ移動
+            if (formData.value.logoFile && logoUrl && logoUrl.includes('temp-')) {
+                // 一旦チーム作成
+                const { data: teamData, error: insertError } = await supabase
+                    .from('teams')
+                    .insert({
+                        team_name: formData.value.teamName,
+                        address: formData.value.location || null,
+                        team_logo_url: logoUrl, // テンポラリーURLで一旦保存
+                        manager_id: userData.value.id,
+                    })
+                    .select()
+                    .single()
 
-            if (insertError) {
-                console.error('Insert error:', insertError)
-                error.value = 'チームの作成に失敗しました'
-                return
+                if (insertError) {
+                    console.error('Insert error:', insertError)
+                    error.value = 'チームの作成に失敗しました'
+                    return
+                }
+
+                // 新しいteam_idでロゴファイルを移動
+                if (teamData?.id) {
+                    try {
+                        const oldFilePath = extractFilePathFromUrl(logoUrl)
+                        if (oldFilePath) {
+                            // 古いファイルを削除
+                            await supabase.storage
+                                .from('team-logos')
+                                .remove([oldFilePath])
+                        }
+
+                        // 新しいパスでファイルを再度アップロード
+                        const fileExt = formData.value.logoFile.name.split('.').pop()
+                        const newFileName = `team-logos/${teamData.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+
+                        const { error: reuploadError } = await supabase.storage
+                            .from('team-logos')
+                            .upload(newFileName, formData.value.logoFile)
+
+                        if (!reuploadError) {
+                            const { data: newUrlData } = supabase.storage
+                                .from('team-logos')
+                                .getPublicUrl(newFileName)
+
+                            finalLogoUrl = newUrlData.publicUrl
+
+                            // チーム情報を更新
+                            await supabase
+                                .from('teams')
+                                .update({ team_logo_url: finalLogoUrl })
+                                .eq('id', teamData.id)
+                        }
+                    } catch (err) {
+                        console.warn('Error moving logo file:', err)
+                        // ロゴ移動エラーは無視して続行
+                    }
+                }
+            } else {
+                // ロゴなし、または正常なパスでのアップロード
+                const { data: teamData, error: insertError } = await supabase
+                    .from('teams')
+                    .insert({
+                        team_name: formData.value.teamName,
+                        address: formData.value.location || null,
+                        team_logo_url: logoUrl,
+                        manager_id: userData.value.id,
+                    })
+                    .select()
+                    .single()
+
+                if (insertError) {
+                    console.error('Insert error:', insertError)
+                    error.value = 'チームの作成に失敗しました'
+                    return
+                }
             }
 
             // 成功：チーム選択画面に戻る
