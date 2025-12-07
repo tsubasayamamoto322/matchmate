@@ -23,7 +23,7 @@
 
                 <!-- 今後の試合セクション -->
                 <div class="mb-8">
-                    <h2 class="text-xl font-bold text-gray-900 mb-4">今後の試合</h2>
+                    <!-- <h2 class="text-xl font-bold text-gray-900 mb-4">次の試合</h2> -->
 
                     <!-- 次の試合カード -->
                     <div v-if="nextMatch" class="bg-white rounded-xl shadow-lg p-6 mb-6">
