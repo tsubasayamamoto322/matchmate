@@ -95,7 +95,14 @@
                     <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
                   </svg>
                 </div>
-                <NuxtLink to="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
+                  <!--未ログイン時： トップページ-->
+                  <div v-if="!displayIsLoggedIn" class="flex gap-3">
+                    <NuxtLink to="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
+                  </div>
+                  <!--ログイン時： チームトップページ-->
+                  <nav v-else class="flex items-center gap-4">
+                    <NuxtLink to="/team_top" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
+                  </nav>
               </div>
               
               <!-- 未ログイン時：ログイン・新規登録ボタン -->
@@ -115,7 +122,7 @@
                   <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                     スケジュール
                   </NuxtLink>
-                  <NuxtLink to="/player/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                     プロフィール
                   </NuxtLink>
                   <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
@@ -128,10 +135,10 @@
                   <NuxtLink :to="{ path: '/schedule', query: { team_id: route.query.team_id } }" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                     スケジュール
                   </NuxtLink>
-                  <NuxtLink to="/manager/teams" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                     チーム管理
                   </NuxtLink>
-                  <NuxtLink to="/manager/players" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  <NuxtLink to="/team_info" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                     選手管理
                   </NuxtLink>
                   <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">

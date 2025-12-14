@@ -72,34 +72,88 @@
                     </div>
                 </div>
 
-                <!-- ロスター（選手一覧） -->
-                <div class="bg-white rounded-xl shadow-lg p-8">
-                    <h2 class="text-xl font-bold text-gray-900 mb-6">所属選手一覧</h2>
+                <!-- ロスター（所属選手一覧） -->
+                <div class="bg-white rounded-xl shadow-lg mb-8">
+                    <h2 class="text-xl font-bold text-gray-900 p-6">所属選手一覧</h2>
                     
                     <div v-if="loading" class="text-center py-8">
                         <p class="text-gray-500">読み込み中...</p>
                     </div>
 
-                    <div v-else-if="players.length === 0" class="text-center py-8">
+                    <div v-else-if="playersApproved.length === 0" class="text-center py-8">
                         <p class="text-gray-500">所属選手はまだいません</p>
                     </div>
 
                     <div v-else class="space-y-2">
-                        <div v-for="player in players" :key="player.id"
+                        <div v-for="playersApproved in playersApproved" :key="playersApproved.id"
                             class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                                <img v-if="player.avatar_url" :src="player.avatar_url" :alt="player.user_name" 
+                                <img v-if="playersApproved.avatar_url" :src="playersApproved.avatar_url" :alt="playersApproved.user_name" 
                                     class="w-full h-full object-cover" />
                                 <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-300 to-blue-600">
-                                    <span class="text-sm font-medium text-white">{{ player.user_name?.charAt(0) || '？' }}</span>
+                                    <span class="text-sm font-medium text-white">{{ plaplayersApprovedyer.user_name?.charAt(0) || '？' }}</span>
                                 </div>
                             </div>
                             <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ player.user_name }}</p>
+                                <p class="text-sm font-medium text-gray-900">{{ playersApproved.user_name }}</p>
                             </div>
                         </div>
                     </div>
                 </div>
+                <!-- ロスター（承認待ち選手一覧） -->
+                  <div class="bg-white rounded-xl shadow-lg mb-8">
+                      <h2 class="text-xl font-bold text-gray-900 p-6">承認待ち選手一覧</h2>
+                      
+                      <div v-if="loading" class="text-center py-8">
+                          <p class="text-gray-500">読み込み中...</p>
+                      </div>
+
+                      <div v-else-if="playersPending.length === 0" class="text-center py-8">
+                          <p class="text-gray-500">現在、承認待ちの選手はいません</p>
+                      </div>
+
+                      <div v-else class="space-y-2 pb-4"> <div v-for="player in playersPending" :key="player.id"
+                              class="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-b border-gray-200 last:border-b-0">
+                              <div class="flex items-center gap-3 flex-1 min-w-0">
+                                  <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                      <img v-if="player.avatar_url" :src="player.avatar_url" :alt="player.user_name" 
+                                          class="w-full h-full object-cover" />
+                                      <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-300 to-blue-600">
+                                          <span class="text-sm font-medium text-white">{{ player.user_name?.charAt(0) || '？' }}</span>
+                                      </div>
+                                  </div>
+                                  <div class="flex-1 min-w-0">
+                                      <p class="text-sm font-medium text-gray-900 truncate">{{ player.user_name }}</p>
+                                  </div>
+                              </div>
+
+                              <div v-if="isManager" class="flex gap-2 flex-shrink-0">
+                                  <button @click="updatePlayerStatus(player.id, 'approved')"
+                                      :disabled="processingPlayerId === player.id"
+                                      class="px-3 py-1 text-sm font-semibold rounded-full transition-colors 
+                                          "
+                                      :class="{ 
+                                          'bg-green-500 text-white hover:bg-green-600': processingPlayerId !== player.id,
+                                          'bg-green-300 text-gray-700 cursor-not-allowed': processingPlayerId === player.id 
+                                      }">
+                                      {{ processingPlayerId === player.id ? '処理中' : '承認' }}
+                                  </button>
+
+                                  <button @click="updatePlayerStatus(player.id, 'rejected')"
+                                      :disabled="processingPlayerId === player.id"
+                                      class="px-3 py-1 text-sm font-semibold rounded-full transition-colors 
+                                          "
+                                      :class="{ 
+                                          'bg-red-500 text-white hover:bg-red-600': processingPlayerId !== player.id,
+                                          'bg-red-300 text-gray-700 cursor-not-allowed': processingPlayerId === player.id 
+                                      }">
+                                      {{ processingPlayerId === player.id ? '処理中' : '拒否' }}
+                                  </button>
+                              </div>
+                              <div v-else class="text-sm text-gray-500 flex-shrink-0">承認待ち</div>
+                          </div>
+                      </div>
+                  </div>
             </div>
         </main>
     </div>
@@ -118,9 +172,11 @@ const { isManager, fetchUserRole, userData: currentUser } = useUserRole()
 // データ
 const teamData = ref<any>(null)
 const managerName = ref<string>('')
-const players = ref<any[]>([])
+const playersApproved = ref<any[]>([])
+const playersPending = ref<any[]>([])
 const loading = ref(true)
 const canEdit = ref(false)
+const processingPlayerId = ref<string | null>(null)
 
 // チーム情報を取得
 const fetchTeamData = async () => {
@@ -164,35 +220,65 @@ const fetchTeamData = async () => {
             }
         }
 
-        // 所属選手を取得
-        const { data: teamMembers, error: membersError } = await supabase
+        // 所属選手を取得（所属選手一覧 status="approved"）
+        const { data: teamMembersapproved, error: membersapprovedError } = await supabase
             .from('team_members')
             .select('player_id')
             .eq('team_id', teamId)
             .eq('status', 'approved')
 
-        if (membersError) {
-            console.error('Error fetching team members:', membersError)
+        if (membersapprovedError) {
+            console.error('Error fetching team members:', membersapprovedError)
             return
         }
 
-        // 選手の詳細情報を取得
-        if (teamMembers && teamMembers.length > 0) {
-            const playerIds = teamMembers.map(m => m.player_id)
+        // 選手の詳細情報を取得（所属選手一覧 status="approved"）
+        if (teamMembersapproved && teamMembersapproved.length > 0) {
+            const playerIds = teamMembersapproved.map(m => m.player_id)
+            const { data: playersApprovedData, error: playersError } = await supabase
+                .from('users')
+                .select('id, user_name, avatar_url')
+                .in('id', playerIds)
+
+            if (playersError) {
+                console.error('Error fetching playersApproved:', playersError)
+                return
+            }
+
+            if (playersApprovedData && Array.isArray(playersApprovedData) && playersApprovedData.length > 0) {
+                playersApproved.value = playersApprovedData
+            }
+        }
+
+        // 所属選手を取得（所属選手一覧 status="pending"）
+        const { data: teamMemberspending, error: memberspendingError } = await supabase
+            .from('team_members')
+            .select('player_id')
+            .eq('team_id', teamId)
+            .eq('status', 'pending')
+
+        if (memberspendingError) {
+            console.error('Error fetching team members:', memberspendingError)
+            return
+        }
+        // 選手の詳細情報を取得（所属選手一覧 status="pending"）
+        if (teamMemberspending && teamMemberspending.length > 0) {
+            const playerIds = teamMemberspending.map(m => m.player_id)
             const { data: playersData, error: playersError } = await supabase
                 .from('users')
                 .select('id, user_name, avatar_url')
                 .in('id', playerIds)
 
             if (playersError) {
-                console.error('Error fetching players:', playersError)
+                console.error('Error fetching playersPending:', playersError)
                 return
             }
 
             if (playersData && Array.isArray(playersData) && playersData.length > 0) {
-                players.value = playersData
+                playersPending.value = playersData
             }
         }
+
     } catch (err) {
         console.error('Error:', err)
     } finally {
@@ -200,6 +286,45 @@ const fetchTeamData = async () => {
     }
 }
 
+/**
+ * 選手の承認ステータスを更新する
+ * @param playerId 選手のユーザーID
+ * @param status 'approved' または 'rejected'
+ */
+const updatePlayerStatus = async (playerId: string, status: 'approved' | 'rejected') => {
+    const teamId = await getTeamId()
+    if (!teamId) {
+        alert('チーム情報が見つかりません。')
+        return
+    }
+
+    processingPlayerId.value = playerId; // 処理中のIDを設定
+
+    try {
+        const { error } = await supabase
+            .from('team_members')
+            .update({ status: status, updated_at: new Date().toISOString() }) // updated_atも更新
+            .eq('team_id', teamId)
+            .eq('player_id', playerId)
+            .select()
+
+        if (error) {
+            console.error(`Error updating player status to ${status}:`, error)
+            alert(`選手の${status === 'approved' ? '承認' : '拒否'}に失敗しました。`)
+            return
+        }
+
+        // 成功した場合、リストを再取得して画面を更新
+        alert(`選手を${status === 'approved' ? '承認' : '拒否'}しました。`)
+        await fetchTeamData() // データを再取得
+        window.location.reload()
+    } catch (err) {
+        console.error('Update operation failed:', err)
+        alert('処理中にエラーが発生しました。')
+    } finally {
+        processingPlayerId.value = null; // 処理中のIDをリセット
+    }
+}
 // ページ読み込み時に実行
 onMounted(async () => {
     await fetchUserRole()
