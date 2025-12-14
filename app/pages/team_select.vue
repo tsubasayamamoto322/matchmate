@@ -11,17 +11,31 @@
               </p>
             </div>
             
-            <!-- 監督専用：チーム新規作成ボタン -->
-            <NuxtLink 
-              v-if="isManager" 
-              to="/manager/teams/create"
-              class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-              </svg>
-              チームを新規作成
-            </NuxtLink>
+            <div class="flex gap-3">
+              <!-- 選手専用：チームに参加ボタン -->
+              <button
+                v-if="!isManager"
+                @click="navigateTo('/team_join')"
+                class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-lg flex items-center gap-2"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                </svg>
+                チームに参加
+              </button>
+
+              <!-- 監督専用：チーム新規作成ボタン -->
+              <NuxtLink 
+                v-if="isManager" 
+                to="/manager/teams/create"
+                class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2"
+              >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                チームを新規作成
+              </NuxtLink>
+            </div>
           </div>
           
           <div class="space-y-4">
@@ -170,17 +184,18 @@ const handleTeamSelect = async (team: any) => {
   })
 }
   
-  useHead({
-    title: 'MatchMate - チーム選択',
-    meta: [
-      { name: 'description', content: 'MatchMateチーム選択' }
-    ]
-  })
-  const { setTeamId } = useTeamSession()
+useHead({
+  title: 'MatchMate - チーム選択',
+  meta: [
+    { name: 'description', content: 'MatchMateチーム選択' }
+  ]
+})
+
+const { setTeamId } = useTeamSession()
 
 const selectTeam = async (team: any) => {
-    const user = await sessionFromUserData();
-    console.log(user)
+  const user = await sessionFromUserData();
+  console.log(user)
   try {
     
     if (!user) {
@@ -201,4 +216,4 @@ const selectTeam = async (team: any) => {
     throw new Error('チーム選択処理でエラーが発生しました')
   }
 }
-  </script>
+</script>
