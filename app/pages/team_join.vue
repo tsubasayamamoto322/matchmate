@@ -163,10 +163,7 @@ const handleJoinTeam = async (team: any) => {
     success.value = `${team.team_name}への参加申請を送信しました！承認をお待ちください。`
     
     // 一覧を再取得
-    await Promise.all([
-      fetchAvailableTeams(),
-      fetchJoinedTeams()
-    ])
+    await fetchAvailableTeams()
 
   } catch (err) {
     error.value = 'エラーが発生しました'
