@@ -63,87 +63,6 @@
           </div>
         </div>
 
-        <!-- 参加済みチーム一覧 -->
-        <div class="bg-white rounded-xl shadow-lg p-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">参加中のチーム</h2>
-
-          <div v-if="loadingJoinedTeams" class="text-center py-8">
-            <p class="text-gray-500">読み込み中...</p>
-          </div>
-
-          <div v-else-if="joinedTeams.length === 0" class="text-center py-8">
-            <div class="mb-4 text-6xl">⚽</div>
-            <p class="text-gray-500">まだチームに参加していません</p>
-            <p class="text-sm text-gray-400 mt-2">上記の参加可能なチームから選択してください</p>
-          </div>
-
-          <div v-else class="space-y-4">
-            <div 
-              v-for="team in joinedTeams" 
-              :key="team.team_id"
-              class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              <div class="flex items-center gap-4 flex-1">
-                <!-- チームロゴ -->
-                <div class="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center flex-shrink-0">
-                  <img v-if="team.teams?.team_logo_url" :src="team.teams.team_logo_url" :alt="team.teams.team_name" class="w-full h-full object-cover" />
-                  <span v-else class="text-2xl text-white font-bold">{{ team.teams?.team_name?.charAt(0) || 'T' }}</span>
-                </div>
-                
-                <!-- チーム情報 -->
-                <div class="flex-1">
-                  <h3 class="font-bold text-gray-900 text-lg">{{ team.teams?.team_name || '不明なチーム' }}</h3>
-                  <p class="text-sm text-gray-600">参加日: {{ formatDate(team.created_at) }}</p>
-                  
-                  <!-- ステータスバッジ -->
-                  <div class="mt-2">
-                    <span 
-                      v-if="team.status === 'approved'"
-                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800"
-                    >
-                      ✓ 承認済み
-                    </span>
-                    <span 
-                      v-else-if="team.status === 'pending'"
-                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800"
-                    >
-                      ⏱ 承認待ち
-                    </span>
-                    <span 
-                      v-else-if="team.status === 'rejected'"
-                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800"
-                    >
-                      ✕ 却下
-                    </span>
-                    <span 
-                      v-else
-                      class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-800"
-                    >
-                      ー 不明
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <div class="flex flex-col space-y-2">
-                <button
-                  v-if="team.status === 'rejected'"
-                  @click="handleRejoinTeam(team.team_id, team.teams?.team_name)"
-                  :disabled="rejoiningTeamId === team.team_id"
-                  class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {{ rejoiningTeamId === team.team_id ? '再申請中...' : '再申請' }}
-                </button>
-              <button
-                @click="selectTeam(team.team_id)"
-                :disabled="team.status !== 'approved'"
-                class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                チームトップへ
-              </button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </main>
   </div>
@@ -156,11 +75,8 @@ const config = useRuntimeConfig()
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey)
 
 const availableTeams = ref<any[]>([])
-const joinedTeams = ref<any[]>([])
 const loadingAvailableTeams = ref(true)
-const loadingJoinedTeams = ref(true)
 const joiningTeamId = ref<string | null>(null)
-const rejoiningTeamId = ref<string | null>(null)
 const error = ref('')
 const success = ref('')
 
@@ -204,44 +120,6 @@ const fetchAvailableTeams = async () => {
     console.error('Error:', err)
   } finally {
     loadingAvailableTeams.value = false
-  }
-}
-
-// 参加中のチーム一覧を取得（ステータス情報を含む）
-const fetchJoinedTeams = async () => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      loadingJoinedTeams.value = false
-      return
-    }
-
-    const { data, error: fetchError } = await supabase
-      .from('team_members')
-      .select(`
-        team_id,
-        created_at,
-        status,
-        teams (
-          id,
-          team_name,
-          team_logo_url
-        )
-      `)
-      .eq('player_id', user.id)
-      .order('created_at', { ascending: false })
-
-    if (fetchError) {
-      console.error('Fetch joined teams error:', fetchError)
-      loadingJoinedTeams.value = false
-      return
-    }
-
-    joinedTeams.value = data || []
-  } catch (err) {
-    console.error('Error:', err)
-  } finally {
-    loadingJoinedTeams.value = false
   }
 }
 
@@ -298,67 +176,6 @@ const handleJoinTeam = async (team: any) => {
   }
 }
 
-// チーム再申請処理 (rejected -> pending)
-const handleRejoinTeam = async (teamId: string, teamName: string) => {
-  rejoiningTeamId.value = teamId
-  error.value = ''
-  success.value = ''
-
-  try {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      error.value = 'ログインが必要です'
-      rejoiningTeamId.value = null
-      return
-    }
-
-    // team_membersのステータスをpendingに更新
-    const { error: updateError } = await supabase
-      .from('team_members')
-      .update({ 
-        status: 'pending',
-        // 再申請の日時を更新したい場合は、updated_atなどを設定できます
-      })
-      .eq('team_id', teamId)
-      .eq('player_id', user.id)
-
-    if (updateError) {
-      error.value = 'チームへの再申請に失敗しました'
-      console.error('Update error:', updateError)
-      rejoiningTeamId.value = null
-      return
-    }
-
-    // 成功
-    success.value = `${teamName || 'チーム'}への参加を再申請しました！承認をお待ちください。`
-
-    // 一覧を再取得
-    await fetchJoinedTeams()
-
-  } catch (err) {
-    error.value = 'エラーが発生しました'
-    console.error('Rejoin team error:', err)
-  } finally {
-    rejoiningTeamId.value = null
-  }
-}
-// チームトップへ遷移（承認済みのみ）
-const selectTeam = async (teamId: string) => {
-  try {
-    const { setTeamId } = useTeamSession()
-    const success = await setTeamId(teamId)
-    
-    if (success) {
-      await navigateTo('/team_info')
-    } else {
-      error.value = 'チーム情報の保存に失敗しました'
-    }
-  } catch (err) {
-    console.error('Select team error:', err)
-    error.value = 'エラーが発生しました'
-  }
-}
-
 // 日付フォーマット
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -367,10 +184,7 @@ const formatDate = (dateString: string) => {
 
 // ページ読み込み時に実行
 onMounted(async () => {
-  await Promise.all([
-    fetchAvailableTeams(),
-    fetchJoinedTeams()
-  ])
+  await fetchAvailableTeams()
 })
 
 useHead({

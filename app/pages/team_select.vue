@@ -1,13 +1,13 @@
 <template>
   <div class="flex flex-col flex-1">
     <!-- メインコンテンツ -->
-    <main class="flex-1 p-8 flex items-center justify-center">
-      <div class="w-full max-w-2xl">
-          <div class="flex justify-between items-center mb-6">
+    <main class="flex-1 p-8">
+      <div class="w-full max-w-4xl mx-auto">
+          <div class="flex justify-between items-center mb-8">
             <div class="flex-1">
               <h2 class="text-gray-900 text-3xl font-bold mb-2">チームの選択</h2>
               <p class="text-gray-700 text-sm">
-                {{ isManager ? '管理するチームを選択してください。' : '操作するチームを選択してください。' }}
+                {{ isManager ? '管理するチームを選択してください。' : '参加しているチームを選択してください。' }}
               </p>
             </div>
             
@@ -37,36 +37,85 @@
               </NuxtLink>
             </div>
           </div>
-          
-          <div class="space-y-4">
-            <button
-              v-for="team in userJoinTeams.data"
-              :key="team.id"
-              @click="selectTeam(team)"
-              class="w-full bg-white rounded-xl shadow-xl p-6 flex gap-4 hover:shadow-2xl hover:scale-102 transition-all transform duration-200 border-2 border-transparent hover:border-green-400"
-            >
-              <div class="flex-shrink-0 relative">
-                <div class="w-32 h-32 bg-gradient-to-br from-green-300 to-green-600 rounded-lg overflow-hidden shadow-lg">
-                  <img 
-                    :src="team.team_logo_url || 'https://via.placeholder.com/128x128?text=Team'" 
-                    :alt="team.team_name"
-                    class="w-full h-full object-cover"
-                  />
+
+          <!-- 承認済みチーム一覧 -->
+          <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">参加中のチーム</h3>
+            
+            <div v-if="approvedTeams.length === 0" class="text-center py-8">
+              <div class="mb-4 text-6xl">⚽</div>
+              <p class="text-gray-500">参加しているチームがありません</p>
+            </div>
+
+            <div v-else class="space-y-4">
+              <button
+                v-for="team in approvedTeams"
+                :key="team.id"
+                @click="selectTeam(team)"
+                class="w-full bg-white rounded-xl shadow-lg p-6 flex gap-4 hover:shadow-2xl hover:scale-102 transition-all transform duration-200 border-2 border-transparent hover:border-green-400 text-left"
+              >
+                <div class="flex-shrink-0 relative">
+                  <div class="w-32 h-32 bg-gradient-to-br from-green-300 to-green-600 rounded-lg overflow-hidden shadow-lg">
+                    <img 
+                      :src="team.team_logo_url || 'https://via.placeholder.com/128x128?text=Team'" 
+                      :alt="team.team_name"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div class="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-lg">⚽</div>
                 </div>
-                <div class="absolute -top-2 -right-2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center text-lg">⚽</div>
+                <div class="flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 class="text-xl font-bold text-gray-900 mb-2">{{ team.team_name }}</h3>
+                    <p class="text-gray-600 text-sm">{{ team.address }}</p>
+                  </div>
+                  <div class="flex gap-2 mt-4">
+                    <button class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md">
+                      選択
+                    </button>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 承認待ちチーム一覧（選手のみ） -->
+          <div v-if="!isManager" class="bg-white rounded-xl shadow-lg p-8">
+            <h3 class="text-2xl font-bold text-gray-900 mb-6">参加申請待機中</h3>
+            
+            <div v-if="pendingTeams.length === 0" class="text-center py-8">
+              <p class="text-gray-500">申請中のチームはありません</p>
+            </div>
+
+            <div v-else class="space-y-4">
+              <div
+                v-for="team in pendingTeams"
+                :key="team.team_id"
+                class="bg-yellow-50 rounded-xl p-6 flex gap-4 border-2 border-yellow-200"
+              >
+                <div class="flex-shrink-0">
+                  <div class="w-24 h-24 bg-gradient-to-br from-yellow-300 to-yellow-600 rounded-lg overflow-hidden shadow-lg">
+                    <img 
+                      :src="team.teams?.team_logo_url || 'https://via.placeholder.com/96x96?text=Team'" 
+                      :alt="team.teams?.team_name"
+                      class="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+                <div class="flex-1 flex flex-col justify-between">
+                  <div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">{{ team.teams?.team_name }}</h3>
+                    <p class="text-gray-600 text-sm">{{ team.teams?.address }}</p>
+                  </div>
+                  <div class="flex items-center gap-3 mt-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
+                      ⏱ 承認待ち
+                    </span>
+                    <p class="text-sm text-gray-500">申請日: {{ formatDate(team.created_at) }}</p>
+                  </div>
+                </div>
               </div>
-              <div class="flex-1 text-left flex flex-col justify-between">
-                <div>
-                  <h3 class="text-xl font-bold text-gray-900 mb-2">{{ team.team_name }}</h3>
-                  <p class="text-gray-600 text-sm">{{ team.address }}</p>
-                </div>
-                <div class="flex gap-2 mt-4">
-                  <button class="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-bold rounded-lg hover:from-green-600 hover:to-green-700 transition-all shadow-md">
-                    選択
-                  </button>
-                </div>
-              </div>
-            </button>
+            </div>
           </div>
       </div>
     </main>
@@ -84,7 +133,8 @@ const config = useRuntimeConfig();
 const supabase = createClient(config.public.supabaseUrl, config.public.supabaseKey) 
 
 // 初期状態
-const userJoinTeams = ref<any>({ data: [] })
+const approvedTeams = ref<any[]>([])
+const pendingTeams = ref<any[]>([])
 const isLoading = ref(true)
 const error = ref<string | null>(null)
 
@@ -107,17 +157,13 @@ onMounted(async () => {
     if (isManager.value) {
       // 監督の場合：teamsテーブルからmanager_idが自分のIDと一致するものを取得
       const result = await getManagerTeams(userData.data.id);
-      userJoinTeams.value = result || { data: [] }
+      approvedTeams.value = result?.data || []
     } else {
       // 選手の場合：team_membersテーブルから参加しているチームを取得
-      const teamsIds = await getJoinTeamsId(userData);
-      if (teamsIds) {
-        const result = await getJoinTeams(teamsIds);
-        userJoinTeams.value = result || { data: [] }
-      }
+      const { approved, pending } = await getPlayerTeams(userData.data.id);
+      approvedTeams.value = approved
+      pendingTeams.value = pending
     }
-
-    console.log(userJoinTeams.value)
   } catch (err) {
     error.value = 'チーム情報の読み込みに失敗しました'
     console.error('Error loading teams:', err)
@@ -155,26 +201,43 @@ async function getManagerTeams(managerId: string) {
     return teams || { data: [] };
 }
 
-// 選手用：参加しているチームのIDを取得
-async function getJoinTeamsId(userData: any) {
-    if(userData != undefined && userData.error == null) {
-        const teams = await supabase.from('team_members').select().eq('player_id',userData.data.id)
-        return teams || null; // 明示的に null を返す
-    }
-    return null;
-}
+// 選手用：承認済みと承認待ちのチームを分けて取得
+async function getPlayerTeams(playerId: string) {
+    try {
+        // team_membersから全ての参加チーム情報を取得
+        const { data: memberData, error: memberError } = await supabase
+            .from('team_members')
+            .select(`
+                team_id,
+                status,
+                created_at,
+                teams (
+                    id,
+                    team_name,
+                    team_logo_url,
+                    address
+                )
+            `)
+            .eq('player_id', playerId)
 
-// 選手用：チームIDからチーム情報を取得
-async function getJoinTeams(teamsIds: any) {
-    if(teamsIds != undefined && teamsIds.error == null && teamsIds.data && teamsIds.data.length > 0) {
-        const arrTeamsIds: string[] = [];
-        teamsIds.data.forEach((teamsId: any) => {
-            arrTeamsIds.push(teamsId.team_id)
-        })
-        const teams = await supabase.from('teams').select().in('id',arrTeamsIds)
-        return teams || { data: [] };
+        if (memberError || !memberData) {
+            console.error('Error fetching team members:', memberError)
+            return { approved: [], pending: [] }
+        }
+
+        // ステータスに基づいて分けます
+        const approved = memberData
+            .filter((member: any) => member.status === 'approved')
+            .map((member: any) => member.teams)
+
+        const pending = memberData
+            .filter((member: any) => member.status === 'pending')
+
+        return { approved, pending }
+    } catch (err) {
+        console.error('Error getting player teams:', err)
+        return { approved: [], pending: [] }
     }
-    return { data: [] }; // チームがない場合は空配列を返す
 }
   
 const handleTeamSelect = async (team: any) => {
@@ -195,9 +258,7 @@ const { setTeamId } = useTeamSession()
 
 const selectTeam = async (team: any) => {
   const user = await sessionFromUserData();
-  console.log(user)
   try {
-    
     if (!user) {
       throw new Error('ユーザー認証エラー')
     }
@@ -213,7 +274,13 @@ const selectTeam = async (team: any) => {
 
   } catch (err) {
     console.error('チーム選択エラー:', err)
-    throw new Error('チーム選択処理でエラーが発生しました')
+    error.value = 'チーム選択処理でエラーが発生しました'
   }
+}
+
+// 日付フォーマット
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString)
+  return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
 }
 </script>
