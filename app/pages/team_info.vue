@@ -85,18 +85,30 @@
                     </div>
 
                     <div v-else class="space-y-2">
-                        <div v-for="playersApproved in playersApproved" :key="playersApproved.id"
-                            class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                                <img v-if="playersApproved.avatar_url" :src="playersApproved.avatar_url" :alt="playersApproved.user_name" 
-                                    class="w-full h-full object-cover" />
-                                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-300 to-blue-600">
-                                    <span class="text-sm font-medium text-white">{{ plaplayersApprovedyer.user_name?.charAt(0) || '？' }}</span>
+                        <div v-for="player in playersApproved" :key="player.id"
+                            class="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                    <img v-if="player.avatar_url" :src="player.avatar_url" :alt="player.user_name" 
+                                        class="w-full h-full object-cover" />
+                                    <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-300 to-blue-600">
+                                        <span class="text-sm font-medium text-white">{{ player.user_name?.charAt(0) || '？' }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ player.user_name }}</p>
                                 </div>
                             </div>
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ playersApproved.user_name }}</p>
-                            </div>
+                            <!-- 監督専用：チームから削除ボタン -->
+                            <button v-if="isManager" @click="removePlayerFromTeam(player.id)"
+                                :disabled="processingPlayerId === player.id"
+                                class="px-3 py-1 text-sm font-semibold rounded-full transition-colors flex-shrink-0"
+                                :class="{ 
+                                    'bg-red-500 text-white hover:bg-red-600': processingPlayerId !== player.id,
+                                    'bg-red-300 text-gray-700 cursor-not-allowed': processingPlayerId === player.id 
+                                }">
+                                {{ processingPlayerId === player.id ? '削除中' : '削除' }}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -283,6 +295,46 @@ const fetchTeamData = async () => {
         console.error('Error:', err)
     } finally {
         loading.value = false
+    }
+}
+
+/**
+ * 選手をチームから削除する（ステータスをrejectに変更）
+ * @param playerId 選手のユーザーID
+ */
+const removePlayerFromTeam = async (playerId: string) => {
+    const teamId = await getTeamId()
+    if (!teamId) {
+        alert('チーム情報が見つかりません。')
+        return
+    }
+
+    if (!confirm('この選手をチームから削除してもよろしいですか？')) {
+        return
+    }
+
+    processingPlayerId.value = playerId
+
+    try {
+        const { error } = await supabase
+            .from('team_members')
+            .update({ status: 'rejected', updated_at: new Date().toISOString() })
+            .eq('team_id', teamId)
+            .eq('player_id', playerId)
+
+        if (error) {
+            console.error('Error removing player from team:', error)
+            alert('選手をチームから削除できませんでした。')
+            return
+        }
+
+        alert('選手をチームから削除しました。')
+        await fetchTeamData()
+    } catch (err) {
+        console.error('Remove operation failed:', err)
+        alert('処理中にエラーが発生しました。')
+    } finally {
+        processingPlayerId.value = null
     }
 }
 
