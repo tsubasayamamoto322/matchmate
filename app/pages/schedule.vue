@@ -35,9 +35,9 @@ const pastMatches = ref<Match[]>([]);
 // ===================================
 // 2. ロジック (タブ切り替えと日時整形)
 // ===================================
-const route = useRoute()
+const route = useRoute();
 const activeTab = ref<"future" | "past">(
-  route.query.show === 'past' ? 'past' : 'future'
+  route.query.show === "past" ? "past" : "future"
 );
 const activeTabClass =
   "bg-white border-b-2 border-blue-500 font-semibold text-gray-800";
@@ -260,28 +260,12 @@ onMounted(async () => {
 
               <!-- アクションボタン -->
               <div class="flex-shrink-0">
-                <button
-                  v-if="isPlayer"
+                <NuxtLink
+                  :to="`/games/${match.id}`"
                   class="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
                 >
-                  {{
-                    activeTab === "future" ? "出欠席の回答" : "試合結果を見る"
-                  }}
-                </button>
-                <div v-else-if="isManager" class="flex gap-2">
-                  <button
-                    v-if="activeTab === 'future'"
-                    class="px-4 py-2 text-sm font-medium text-green-600 border-2 border-green-200 bg-green-50 rounded-lg hover:bg-green-100 transition-colors"
-                  >
-                    出欠状況を確認
-                  </button>
-                  <button
-                    v-else
-                    class="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    試合結果を入力
-                  </button>
-                </div>
+                  詳細を見る
+                </NuxtLink>
               </div>
             </div>
           </template>
