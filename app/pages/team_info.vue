@@ -85,18 +85,30 @@
                     </div>
 
                     <div v-else class="space-y-2">
-                        <div v-for="playersApproved in playersApproved" :key="playersApproved.id"
-                            class="flex items-center gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
-                                <img v-if="playersApproved.avatar_url" :src="playersApproved.avatar_url" :alt="playersApproved.user_name" 
-                                    class="w-full h-full object-cover" />
-                                <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-300 to-blue-600">
-                                    <span class="text-sm font-medium text-white">{{ plaplayersApprovedyer.user_name?.charAt(0) || '？' }}</span>
+                        <div v-for="player in playersApproved" :key="player.id"
+                            class="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                                <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                                    <img v-if="player.avatar_url" :src="player.avatar_url" :alt="player.user_name" 
+                                        class="w-full h-full object-cover" />
+                                    <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-300 to-blue-600">
+                                        <span class="text-sm font-medium text-white">{{ player.user_name?.charAt(0) || '？' }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-sm font-medium text-gray-900 truncate">{{ player.user_name }}</p>
                                 </div>
                             </div>
-                            <div class="flex-1">
-                                <p class="text-sm font-medium text-gray-900">{{ playersApproved.user_name }}</p>
-                            </div>
+                            <!-- 監督専用：チームから削除ボタン -->
+                            <button v-if="isManager" @click="removePlayerFromTeam(player.id)"
+                                :disabled="processingPlayerId === player.id"
+                                class="px-3 py-1 text-sm font-semibold rounded-full transition-colors flex-shrink-0"
+                                :class="{ 
+                                    'bg-red-500 text-white hover:bg-red-600': processingPlayerId !== player.id,
+                                    'bg-red-300 text-gray-700 cursor-not-allowed': processingPlayerId === player.id 
+                                }">
+                                {{ processingPlayerId === player.id ? '削除中' : '削除' }}
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -287,6 +299,77 @@ const fetchTeamData = async () => {
 }
 
 /**
+ * 選手をチームから削除する（ステータスをrejectに変更し、未来の試合のattendanceを削除）
+ * @param playerId 選手のユーザーID
+ */
+const removePlayerFromTeam = async (playerId: string) => {
+    const teamId = await getTeamId()
+    if (!teamId) {
+        alert('チーム情報が見つかりません。')
+        return
+    }
+
+    if (!confirm('この選手をチームから削除してもよろしいですか？')) {
+        return
+    }
+
+    processingPlayerId.value = playerId
+
+    try {
+        // 1. team_membersのステータスを'rejected'に更新
+        const { error: updateError } = await supabase
+            .from('team_members')
+            .update({ status: 'rejected', updated_at: new Date().toISOString() })
+            .eq('team_id', teamId)
+            .eq('player_id', playerId)
+
+        if (updateError) {
+            console.error('Error removing player from team:', updateError)
+            alert('選手をチームから削除できませんでした。')
+            return
+        }
+
+        // 2. 未来の試合のattendanceレコードを削除
+        // 本日以降の試合を取得
+        const now = new Date()
+        const todayDate = now.toISOString().substring(0, 10)
+
+        const { data: futureGames, error: gamesError } = await supabase
+            .from('games')
+            .select('id')
+            .eq('team_id', teamId)
+            .gte('game_date', todayDate)
+
+        if (gamesError) {
+            console.error('Error fetching future games:', gamesError)
+            // エラーが出ても、team_membersの更新は完了しているので続行
+        } else if (futureGames && futureGames.length > 0) {
+            const gameIds = futureGames.map(g => g.id)
+
+            // その選手の未来の試合のattendanceレコードを削除
+            const { error: deleteError } = await supabase
+                .from('attendances')
+                .delete()
+                .eq('player_id', playerId)
+                .in('game_id', gameIds)
+
+            if (deleteError) {
+                console.error('Error deleting attendances:', deleteError)
+                // attendanceの削除に失敗してもアラートは表示しない（team_membersは更新済み）
+            }
+        }
+
+        alert('選手をチームから削除しました。')
+        await fetchTeamData()
+    } catch (err) {
+        console.error('Remove operation failed:', err)
+        alert('処理中にエラーが発生しました。')
+    } finally {
+        processingPlayerId.value = null
+    }
+}
+
+/**
  * 選手の承認ステータスを更新する
  * @param playerId 選手のユーザーID
  * @param status 'approved' または 'rejected'
@@ -301,20 +384,104 @@ const updatePlayerStatus = async (playerId: string, status: 'approved' | 'reject
     processingPlayerId.value = playerId; // 処理中のIDを設定
 
     try {
-        const { error } = await supabase
+        // 1. team_membersのステータスを更新
+        const { error: updateError } = await supabase
             .from('team_members')
-            .update({ status: status, updated_at: new Date().toISOString() }) // updated_atも更新
+            .update({ status: status, updated_at: new Date().toISOString() })
             .eq('team_id', teamId)
             .eq('player_id', playerId)
             .select()
 
-        if (error) {
-            console.error(`Error updating player status to ${status}:`, error)
+        if (updateError) {
+            console.error(`Error updating player status to ${status}:`, updateError)
             alert(`選手の${status === 'approved' ? '承認' : '拒否'}に失敗しました。`)
             return
         }
 
-        // 成功した場合、リストを再取得して画面を更新
+        // 2. 承認時は、本日以降の試合にattendanceレコードを作成
+        if (status === 'approved') {
+            const now = new Date()
+            const todayDate = now.toISOString().substring(0, 10)
+
+            // 本日以降の試合を取得
+            const { data: futureGames, error: gamesError } = await supabase
+                .from('games')
+                .select('id')
+                .eq('team_id', teamId)
+                .gte('game_date', todayDate)
+
+            if (gamesError) {
+                console.error('Error fetching future games:', gamesError)
+                // エラーが出ても、team_membersの更新は完了しているので続行
+            } else if (futureGames && futureGames.length > 0) {
+                // 既に存在するattendanceレコードを確認
+                const { data: existingAttendances, error: checkError } = await supabase
+                    .from('attendances')
+                    .select('game_id')
+                    .eq('player_id', playerId)
+                    .in('game_id', futureGames.map(g => g.id))
+
+                if (checkError) {
+                    console.error('Error checking attendances:', checkError)
+                } else {
+                    const existingGameIds = new Set(existingAttendances?.map(a => a.game_id) || [])
+
+                    // 存在しないattendanceレコードのみ作成
+                    const attendancesToInsert = futureGames
+                        .filter(game => !existingGameIds.has(game.id))
+                        .map(game => ({
+                            game_id: game.id,
+                            player_id: playerId,
+                            status: 'unanswered',
+                            created_at: new Date().toISOString()
+                        }))
+
+                    if (attendancesToInsert.length > 0) {
+                        const { error: insertError } = await supabase
+                            .from('attendances')
+                            .insert(attendancesToInsert)
+
+                        if (insertError) {
+                            console.error('Error creating attendances:', insertError)
+                            // insertエラーが出てもteam_membersの更新は完了しているので続行
+                        }
+                    }
+                }
+            }
+        }
+        // 3. 拒否時は、未来の試合のattendanceレコードを削除
+        else if (status === 'rejected') {
+            const now = new Date()
+            const todayDate = now.toISOString().substring(0, 10)
+
+            // 本日以降の試合を取得
+            const { data: futureGames, error: gamesError } = await supabase
+                .from('games')
+                .select('id')
+                .eq('team_id', teamId)
+                .gte('game_date', todayDate)
+
+            if (gamesError) {
+                console.error('Error fetching future games:', gamesError)
+                // エラーが出ても続行
+            } else if (futureGames && futureGames.length > 0) {
+                const gameIds = futureGames.map(g => g.id)
+
+                // その選手の未来の試合のattendanceレコードを削除
+                const { error: deleteError } = await supabase
+                    .from('attendances')
+                    .delete()
+                    .eq('player_id', playerId)
+                    .in('game_id', gameIds)
+
+                if (deleteError) {
+                    console.error('Error deleting attendances:', deleteError)
+                    // 削除エラーが出てもteam_membersの更新は完了しているので続行
+                }
+            }
+        }
+
+        // 成功メッセージ
         alert(`選手を${status === 'approved' ? '承認' : '拒否'}しました。`)
         await fetchTeamData() // データを再取得
         window.location.reload()

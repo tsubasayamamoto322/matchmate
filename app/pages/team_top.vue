@@ -47,14 +47,14 @@
                             </div>
                             <div class="text-right flex flex-col gap-3">
                                 <!-- 選手用：出欠ステータス表示 -->
-                                <div v-if="isPlayer">
+                                <div v-if="isPlayer && nextMatch.attendance_status">
                                     <span class="px-3 py-1 text-sm rounded-full"
                                         :class="getStatusClass(nextMatch.attendance_status)">
                                         {{ getStatusText(nextMatch.attendance_status) }}
                                     </span>
                                 </div>
                                 <!-- 監督用：未回答者ステータス表示 -->
-                                <div v-else-if="isManager">
+                                <div v-else-if="isManager && nextMatch.attendance_status">
                                     <span class="px-3 py-1 text-sm rounded-full"
                                         :class="nextMatch.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
                                         {{ nextMatch.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
@@ -99,12 +99,12 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <!-- 選手用：出欠ステータス表示 -->
-                                <span v-if="isPlayer" class="px-3 py-1 text-sm rounded-full"
+                                <span v-if="isPlayer && match.attendance_status" class="px-3 py-1 text-sm rounded-full"
                                     :class="getStatusClass(match.attendance_status)">
                                     {{ getStatusText(match.attendance_status) }}
                                 </span>
                                 <!-- 監督用：未回答者ステータス表示 -->
-                                <span v-else-if="isManager" class="px-3 py-1 text-sm rounded-full"
+                                <span v-else-if="isManager && match.attendance_status" class="px-3 py-1 text-sm rounded-full"
                                     :class="match.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
                                     {{ match.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
                                 </span>
@@ -122,13 +122,19 @@
                     <h3 class="text-lg font-bold text-gray-900 mb-4">クイックアクション</h3>
                     <div class="grid grid-cols-2 gap-4">
                         <NuxtLink to="/team_info"
-                            class="p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all text-center">
+                            class="relative p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all text-center block">
                             <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                             </svg>
                             <p class="text-sm font-medium text-gray-900">チーム情報</p>
+                            <!-- 承認待ち選手がいる場合のインジケーター（監督のみ） -->
+                            <div v-if="isManager && pendingMembersCount > 0" class="absolute -top-2 -right-2">
+                                <div class="relative w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center text-xs font-bold shadow-lg">
+                                    {{ pendingMembersCount }}
+                                </div>
+                            </div>
                         </NuxtLink>
 
                         <NuxtLink to="/profile"
@@ -200,13 +206,14 @@ interface Match {
     created_at?: string
     updated_at?: string
     opponent_logo?: string | null
-    attendance_status?: string
+    attendance_status?: string | null
 }
 
 const nextMatch = ref<Match | undefined>(undefined)
 const upcomingMatches = ref<Match[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+const pendingMembersCount = ref(0)
 
 // Supabaseからデータを取得
 const fetchMatches = async () => {
@@ -276,12 +283,23 @@ const fetchMatches = async () => {
             }
 
             const matchesWithStatus = (allMatches || []).map(match => {
+                const attendances = match.attendances || []
+                
+                // attendanceレコードがない場合はステータスを表示しない
+                if (attendances.length === 0) {
+                    const { attendances: _, ...rest } = match;
+                    return {
+                        ...rest, 
+                        attendance_status: null
+                    } as Match
+                }
+                
                 // 未回答者がいるかを判定
-                const hasUnanswered = (match.attendances || []).some(
+                const hasUnanswered = attendances.some(
                     (att: any) => att.status === 'unanswered'
                 )
                 
-                const { attendances, ...rest } = match;
+                const { attendances: _, ...rest } = match;
 
                 return {
                     ...rest, 
@@ -302,11 +320,39 @@ const fetchMatches = async () => {
     }
 }
 
+// 承認待ち選手を取得
+const fetchPendingMembers = async () => {
+    try {
+        const teamId = await getTeamId()
+        if (!teamId) return
+
+        const { data, error: fetchError } = await supabase
+            .from('team_members')
+            .select('id')
+            .eq('team_id', teamId)
+            .eq('status', 'pending')
+
+        if (fetchError) {
+            console.error('Error fetching pending members:', fetchError)
+            return
+        }
+
+        pendingMembersCount.value = data?.length || 0
+    } catch (err) {
+        console.error('Error in fetchPendingMembers:', err)
+    }
+}
+
 // ページ読み込み時にデータを取得
 onMounted(async () => {
     await fetchUserRole()
     await fetchUserData()
     await fetchMatches()
+    
+    // 監督の場合のみ承認待ち選手を取得
+    if (isManager.value) {
+        await fetchPendingMembers()
+    }
 })
 
 // 日付フォーマット
