@@ -117,8 +117,18 @@
               
               <!-- ログイン時：メニューバー（ロールに応じて表示） -->
               <nav v-else class="flex items-center gap-4">
+                <!-- team_select.vue の場合：プロフィールとログアウトのみ -->
+                <template v-if="route.path === '/team_select'">
+                  <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                    プロフィール
+                  </NuxtLink>
+                  <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                    ログアウト
+                  </button>
+                </template>
+                
                 <!-- 選手用メニュー -->
-                <template v-if="isPlayer">
+                <template v-else-if="isPlayer">
                   <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                     スケジュール
                   </NuxtLink>
@@ -132,14 +142,14 @@
                 
                 <!-- 監督用メニュー -->
                 <template v-else-if="isManager">
-                  <NuxtLink :to="{ path: '/schedule', query: { team_id: route.query.team_id } }" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
                     スケジュール
                   </NuxtLink>
                   <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    チーム管理
+                    プロフィール
                   </NuxtLink>
                   <NuxtLink to="/team_info" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    選手管理
+                    チーム・選手管理
                   </NuxtLink>
                   <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
                     ログアウト
