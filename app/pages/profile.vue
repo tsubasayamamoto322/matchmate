@@ -127,43 +127,6 @@
                     </form>
                 </div>
 
-                <!-- 過去の試合セクション -->
-                <div class="bg-white rounded-xl shadow-lg p-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">過去の試合</h2>
-
-                    <div v-if="loading" class="text-center py-8">
-                        <p class="text-gray-500">読み込み中...</p>
-                    </div>
-
-                    <div v-else-if="pastMatches.length === 0" class="text-center py-8">
-                        <p class="text-gray-500">過去の試合情報はありません</p>
-                    </div>
-
-                    <div v-else class="space-y-4">
-                        <div v-for="match in pastMatches" :key="match.id"
-                            class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <div class="flex-grow">
-                                <p class="font-semibold text-gray-900 mb-1">{{ match.opponent_team }}</p>
-                                <p class="text-sm text-gray-600">{{ formatDate(match.game_date) }}（{{ formatDayOfWeek(match.game_date) }}）・{{ formatTime(match.game_time) }}</p>
-                                <p class="text-sm text-gray-500">{{ match.location || '場所未定' }}</p>
-                            </div>
-                            <div class="ml-4 flex-shrink-0">
-                                <NuxtLink :to="`/games/${match.id}`"
-                                    class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                                    詳細
-                                </NuxtLink>
-                            </div>
-                        </div>
-
-                        <!-- もっと見るボタン -->
-                        <div class="flex justify-center mt-8">
-                            <NuxtLink to="/schedule?show=past"
-                                class="px-6 py-3 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors">
-                                もっと見る
-                            </NuxtLink>
-                        </div>
-                    </div>
-                </div>
             </div>
         </main>
     </div>
@@ -179,8 +142,6 @@ const { getTeamId } = useTeamSession()
 
 // データ
 const userData = ref<any>(null)
-const pastMatches = ref<any[]>([])
-const loading = ref(true)
 const isEditing = ref(false)
 const isSaving = ref(false)
 const editError = ref<string | null>(null)
@@ -224,37 +185,6 @@ const fetchUserData = async () => {
     }
 }
 
-// 過去の試合を取得
-const fetchPastMatches = async () => {
-    try {
-        const teamId = await getTeamId()
-        if (!teamId) return
-
-        const now = new Date()
-        const todayDate = now.toISOString().substring(0, 10)
-
-        // 過去の試合を直近5つ取得
-        const { data, error } = await supabase
-            .from('games')
-            .select('*')
-            .eq('team_id', teamId)
-            .lt('game_date', todayDate)
-            .order('game_date', { ascending: false })
-            .order('game_time', { ascending: false })
-            .limit(5)
-
-        if (error) {
-            console.error('Error fetching past matches:', error)
-            return
-        }
-
-        pastMatches.value = data || []
-    } catch (err) {
-        console.error('Error:', err)
-    } finally {
-        loading.value = false
-    }
-}
 
 // 編集開始
 const startEdit = () => {
@@ -433,31 +363,7 @@ const saveProfile = async () => {
 // ページ読み込み時に実行
 onMounted(async () => {
     await fetchUserData()
-    await fetchPastMatches()
 })
-
-// 日付フォーマット
-const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
-}
-
-// 曜日フォーマット
-const formatDayOfWeek = (dateString: string) => {
-    const date = new Date(dateString)
-    const days = ['日', '月', '火', '水', '木', '金', '土']
-    return days[date.getDay()]
-}
-
-// 時刻フォーマット
-const formatTime = (timeString: string | null) => {
-    if (!timeString) return '時刻未定'
-    const [hours, minutes = '00'] = timeString.split(':')
-    const hour = parseInt(hours || '0')
-    const ampm = hour < 12 ? '午前' : '午後'
-    const displayHour = hour % 12 === 0 ? 12 : hour % 12
-    return `${ampm}${displayHour}時${minutes}分`
-}
 
 // Supabase URLからファイルパスを抽出
 const extractFilePathFromUrl = (url?: string): string | null => {
