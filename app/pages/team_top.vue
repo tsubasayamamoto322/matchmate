@@ -47,14 +47,14 @@
                             </div>
                             <div class="text-right flex flex-col gap-3">
                                 <!-- 選手用：出欠ステータス表示 -->
-                                <div v-if="isPlayer">
+                                <div v-if="isPlayer && nextMatch.attendance_status">
                                     <span class="px-3 py-1 text-sm rounded-full"
                                         :class="getStatusClass(nextMatch.attendance_status)">
                                         {{ getStatusText(nextMatch.attendance_status) }}
                                     </span>
                                 </div>
                                 <!-- 監督用：未回答者ステータス表示 -->
-                                <div v-else-if="isManager">
+                                <div v-else-if="isManager && nextMatch.attendance_status">
                                     <span class="px-3 py-1 text-sm rounded-full"
                                         :class="nextMatch.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
                                         {{ nextMatch.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
@@ -99,12 +99,12 @@
                             </div>
                             <div class="flex items-center gap-2">
                                 <!-- 選手用：出欠ステータス表示 -->
-                                <span v-if="isPlayer" class="px-3 py-1 text-sm rounded-full"
+                                <span v-if="isPlayer && match.attendance_status" class="px-3 py-1 text-sm rounded-full"
                                     :class="getStatusClass(match.attendance_status)">
                                     {{ getStatusText(match.attendance_status) }}
                                 </span>
                                 <!-- 監督用：未回答者ステータス表示 -->
-                                <span v-else-if="isManager" class="px-3 py-1 text-sm rounded-full"
+                                <span v-else-if="isManager && match.attendance_status" class="px-3 py-1 text-sm rounded-full"
                                     :class="match.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
                                     {{ match.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
                                 </span>
@@ -206,7 +206,7 @@ interface Match {
     created_at?: string
     updated_at?: string
     opponent_logo?: string | null
-    attendance_status?: string
+    attendance_status?: string | null
 }
 
 const nextMatch = ref<Match | undefined>(undefined)
@@ -283,12 +283,23 @@ const fetchMatches = async () => {
             }
 
             const matchesWithStatus = (allMatches || []).map(match => {
+                const attendances = match.attendances || []
+                
+                // attendanceレコードがない場合はステータスを表示しない
+                if (attendances.length === 0) {
+                    const { attendances: _, ...rest } = match;
+                    return {
+                        ...rest, 
+                        attendance_status: null
+                    } as Match
+                }
+                
                 // 未回答者がいるかを判定
-                const hasUnanswered = (match.attendances || []).some(
+                const hasUnanswered = attendances.some(
                     (att: any) => att.status === 'unanswered'
                 )
                 
-                const { attendances, ...rest } = match;
+                const { attendances: _, ...rest } = match;
 
                 return {
                     ...rest, 
