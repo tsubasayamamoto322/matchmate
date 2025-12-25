@@ -16,10 +16,79 @@
 
                 <!-- 試合情報セクション -->
                 <div v-if="match" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                    <h1 class="text-3xl font-bold text-gray-900 mb-6">試合詳細</h1>
+                    <div class="flex items-center justify-between mb-6">
+                        <h1 class="text-3xl font-bold text-gray-900">試合詳細</h1>
+                        <!-- 監督用編集ボタン -->
+                        <button v-if="isManager && !isEditingMatch" @click="startEditMatch"
+                            class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            編集
+                        </button>
+                    </div>
                     
-                    <!-- 試合情報グリッド -->
-                    <div class="grid grid-cols-2 gap-6 mb-8">
+                    <!-- 編集モード -->
+                    <div v-if="isEditingMatch && isManager" class="mb-8 p-6 bg-gray-50 rounded-lg border-2 border-green-200">
+                        <h2 class="text-xl font-bold text-gray-900 mb-4">試合情報を編集</h2>
+                        <form @submit.prevent="saveMatch" class="space-y-4">
+                            <!-- 対戦相手 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">対戦相手</label>
+                                <input v-model="editFormData.opponent_team" type="text" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                            </div>
+
+                            <!-- 試合日付 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">試合日</label>
+                                <input v-model="editFormData.game_date" type="date" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                            </div>
+
+                            <!-- 試合時間 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">試合時間</label>
+                                <input v-model="editFormData.game_time" type="time" required
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                            </div>
+
+                            <!-- 場所 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">場所</label>
+                                <input v-model="editFormData.location" type="text"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                            </div>
+
+                            <!-- 備考 -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">備考</label>
+                                <textarea v-model="editFormData.notes"
+                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                    rows="3"></textarea>
+                            </div>
+
+                            <!-- エラーメッセージ -->
+                            <div v-if="editError" class="p-4 bg-red-50 text-red-600 rounded-lg text-sm">
+                                {{ editError }}
+                            </div>
+
+                            <!-- ボタン -->
+                            <div class="flex gap-3 pt-4">
+                                <button type="button" @click="cancelEditMatch"
+                                    class="flex-1 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                    キャンセル
+                                </button>
+                                <button type="submit" :disabled="isSavingMatch"
+                                    class="flex-1 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {{ isSavingMatch ? '保存中...' : '保存' }}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- 試合情報グリッド（表示モード） -->
+                    <div v-if="!isEditingMatch" class="grid grid-cols-2 gap-6 mb-8">
                         <!-- 対戦相手 -->
                         <div>
                             <p class="text-sm font-medium text-gray-500 mb-1">対戦相手</p>
@@ -101,16 +170,6 @@
                         <p v-if="attendanceError" class="text-red-600 text-sm mt-2">{{ attendanceError }}</p>
                     </div>
 
-                    <!-- 試合結果入力ボタン（監督用） -->
-                    <div v-if="isManager" class="border-t border-gray-200 pt-8">
-                        <NuxtLink :to="`/manager/games/${match.id}/result`"
-                            class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            試合結果を入力
-                        </NuxtLink>
-                    </div>
                 </div>
 
                 <!-- 出欠状況セクション -->
@@ -173,6 +232,18 @@ const myAttendance = ref<string>('unanswered')
 const isSubmittingAttendance = ref(false)
 const attendanceError = ref<string | null>(null)
 
+// 試合情報編集用
+const isEditingMatch = ref(false)
+const isSavingMatch = ref(false)
+const editError = ref<string | null>(null)
+const editFormData = ref({
+    opponent_team: '',
+    game_date: '',
+    game_time: '',
+    location: '',
+    notes: ''
+})
+
 // 試合情報を取得
 const fetchMatch = async () => {
     try {
@@ -229,12 +300,6 @@ const fetchAttendances = async () => {
                 `)
                 .eq('game_id', matchId)
                 .in('player_id', memberIds)
-
-            if (attendanceError) {
-                console.error('Error fetching attendances:', attendanceError)
-                loading.value = false
-                return
-            }
 
             if (attendanceError) {
                 console.error('Error fetching attendances:', attendanceError)
@@ -337,6 +402,62 @@ const submitAttendance = async (status: string) => {
         attendanceError.value = '出欠の更新中にエラーが発生しました'
     } finally {
         isSubmittingAttendance.value = false
+    }
+}
+
+// 試合情報編集機能
+const startEditMatch = () => {
+    if (!match.value) return
+    editFormData.value = {
+        opponent_team: match.value.opponent_team,
+        game_date: match.value.game_date,
+        game_time: match.value.game_time || '',
+        location: match.value.location || '',
+        notes: match.value.notes || ''
+    }
+    isEditingMatch.value = true
+    editError.value = null
+}
+
+const cancelEditMatch = () => {
+    isEditingMatch.value = false
+    editError.value = null
+}
+
+const saveMatch = async () => {
+    if (isSavingMatch.value) return
+    isSavingMatch.value = true
+    editError.value = null
+
+    try {
+        const matchId = route.params.id as string
+
+        const { error } = await supabase
+            .from('games')
+            .update({
+                opponent_team: editFormData.value.opponent_team,
+                game_date: editFormData.value.game_date,
+                game_time: editFormData.value.game_time,
+                location: editFormData.value.location,
+                notes: editFormData.value.notes,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', matchId)
+
+        if (error) {
+            console.error('Error updating match:', error)
+            editError.value = '試合情報の更新に失敗しました'
+            return
+        }
+
+        // マッチ情報を再取得して表示を更新
+        await fetchMatch()
+        isEditingMatch.value = false
+    } catch (err) {
+        console.error('Error:', err)
+        editError.value = '試合情報の更新中にエラーが発生しました'
+    } finally {
+        isSavingMatch.value = false
     }
 }
 

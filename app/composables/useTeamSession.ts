@@ -10,13 +10,13 @@ export const useTeamSession = () => {
 
     // インスタンスごとに独立した状態を保持
     const sessionTeamId = ref<string | null>(null);
-    let isInitialized = false;
+    const isInitialized = ref(false);
 
     /**
      * セッションからチームIDを取得
      */
     const getTeamId = async (): Promise<string | null> => {
-        if (isInitialized && sessionTeamId.value) {
+        if (isInitialized.value && sessionTeamId.value) {
             return sessionTeamId.value;
         }
 
@@ -32,7 +32,7 @@ export const useTeamSession = () => {
 
             if (user?.user_metadata?.data?.teamId) {
                 sessionTeamId.value = user.user_metadata.data.teamId;
-                isInitialized = true;
+                isInitialized.value = true;
                 return sessionTeamId.value;
             } else {
                 console.debug("Team ID not found in user metadata", {
@@ -78,7 +78,7 @@ export const useTeamSession = () => {
             }
 
             sessionTeamId.value = teamId;
-            isInitialized = true;
+            isInitialized.value = true;
             console.log("Team ID set successfully:", teamId);
             return true;
         } catch (err) {
@@ -92,7 +92,7 @@ export const useTeamSession = () => {
      */
     const clearTeamId = () => {
         sessionTeamId.value = null;
-        isInitialized = false;
+        isInitialized.value = false;
     };
 
     return {

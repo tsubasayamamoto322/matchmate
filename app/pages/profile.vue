@@ -263,6 +263,7 @@ const saveProfile = async () => {
         let avatarUrl = editFormData.value.avatar_url
 
         // アバターがアップロードされた場合
+        // 注：team-logos バケットは概念的にはロゴとアバター両方を格納する共通ストレージとして機能
         // パス: team-logos/avatars/{user_id}/{timestamp}.{ext}
         if (editFormData.value.avatar_file) {
             const fileExt = editFormData.value.avatar_file.name.split('.').pop()
