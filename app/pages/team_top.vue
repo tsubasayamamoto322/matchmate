@@ -221,18 +221,24 @@ const fetchMatches = async () => {
     error.value = null
     try {
         const { data: { user: authUser } } = await supabase.auth.getUser()
-        // セッションからチームIDを取得
-        const teamId = await getTeamId()
-
-        // 現在の日付を取得
-        const now = new Date()
-        const todayDate = now.toISOString().substring(0, 10)
-
+        
         // 本日以降の試合をすべて取得
         if (!authUser) {
             error.value = 'ユーザー認証情報が取得できません'
             return
         }
+
+        // セッションからチームIDを取得
+        const teamId = await getTeamId()
+
+        if (!teamId) {
+            error.value = 'チームIDが取得できません'
+            return
+        }
+
+        // 現在の日付を取得
+        const now = new Date()
+        const todayDate = now.toISOString().substring(0, 10)
 
         // 選手の場合
         if (isPlayer.value) {
