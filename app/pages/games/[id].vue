@@ -307,12 +307,6 @@ const fetchAttendances = async () => {
                 return
             }
 
-            if (attendanceError) {
-                console.error('Error fetching attendances:', attendanceError)
-                loading.value = false
-                return
-            }
-
             if (attendances && attendances.length > 0) {
                 const formatted = attendances
                     .filter((att: any) => att.users !== null)
