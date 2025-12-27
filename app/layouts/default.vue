@@ -89,11 +89,9 @@
           <!-- ヘッダー（固定） -->
           <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gray-900 rounded flex items-center justify-center">
-                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-                  </svg>
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8">
+                  <img src="@/assets/images/logo.png" alt="MatchMate" class="w-full h-full object-contain" />
                 </div>
                   <!--未ログイン時： トップページ-->
                   <div v-if="!displayIsLoggedIn" class="flex gap-3">
@@ -170,10 +168,8 @@
                 <!-- ロゴとキャッチコピー -->
                 <div>
                   <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
-                      <svg class="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-                      </svg>
+                    <div class="w-8 h-8">
+                      <img src="@/assets/images/logo.png" alt="MatchMate" class="w-full h-full object-contain" />
                     </div>
                     <span class="text-xl font-bold">MatchMate</span>
                   </div>
