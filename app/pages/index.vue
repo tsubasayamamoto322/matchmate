@@ -1,37 +1,5 @@
 <template>
   <div class="min-h-screen bg-white">
-    <!-- ナビゲーションバー -->
-    <nav class="bg-white border-b border-gray-200 shadow-sm">
-      <div
-        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between"
-      >
-        <div class="flex items-center gap-3">
-          <div class="w-8 h-8">
-            <img
-              src="@/assets/images/logo.png"
-              alt="MatchMate"
-              class="w-full h-full object-contain"
-            />
-          </div>
-          <span class="text-2xl font-bold text-gray-900">MatchMate</span>
-        </div>
-        <div class="flex gap-3">
-          <NuxtLink
-            to="login"
-            class="px-4 py-2 text-gray-700 font-medium hover:text-gray-900 transition"
-          >
-            ログイン
-          </NuxtLink>
-          <NuxtLink
-            to="register"
-            class="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition"
-          >
-            サインアップ
-          </NuxtLink>
-        </div>
-      </div>
-    </nav>
-
     <!-- メインコンテンツ -->
     <main class="w-full">
       <!-- ヒーロー セクション -->
@@ -284,25 +252,6 @@
           </div>
         </div>
       </section>
-
-      <!-- フッター -->
-      <footer class="bg-gray-900 text-gray-400 py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex items-center gap-3 mb-8">
-            <div class="w-7 h-7">
-              <img
-                src="@/assets/images/logo.png"
-                alt="MatchMate"
-                class="w-full h-full object-contain"
-              />
-            </div>
-            <span class="text-xl font-bold text-white">MatchMate</span>
-          </div>
-          <p class="text-sm">
-            © 2025 MatchMate. スポーツチーム向けチーム活動管理アプリ。
-          </p>
-        </div>
-      </footer>
     </main>
   </div>
 </template>

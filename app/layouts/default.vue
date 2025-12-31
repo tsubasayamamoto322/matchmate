@@ -87,28 +87,29 @@
           </div>
   
           <!-- ヘッダー（固定） -->
-          <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+          <header class="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+              <!-- ロゴと企業名 -->
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8">
                   <img src="@/assets/images/logo.png" alt="MatchMate" class="w-full h-full object-contain" />
                 </div>
-                  <!--未ログイン時： トップページ-->
-                  <div v-if="!displayIsLoggedIn" class="flex gap-3">
-                    <NuxtLink to="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
-                  </div>
-                  <!--ログイン時： チームトップページ-->
-                  <nav v-else class="flex items-center gap-4">
-                    <NuxtLink to="/team_top" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
-                  </nav>
+                <!--未ログイン時： トップページ-->
+                <NuxtLink v-if="!displayIsLoggedIn" to="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
+                  MatchMate
+                </NuxtLink>
+                <!--ログイン時： チームトップページ-->
+                <NuxtLink v-else to="/team_top" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
+                  MatchMate
+                </NuxtLink>
               </div>
               
               <!-- 未ログイン時：ログイン・新規登録ボタン -->
               <div v-if="!displayIsLoggedIn" class="flex gap-3">
-                <NuxtLink to="/login" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                <NuxtLink to="/login" class="px-4 py-2 text-gray-700 font-medium hover:text-gray-900 transition">
                   ログイン
                 </NuxtLink>
-                <NuxtLink to="/register" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                <NuxtLink to="/register" class="px-4 py-2 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition">
                   新規登録
                 </NuxtLink>
               </div>
