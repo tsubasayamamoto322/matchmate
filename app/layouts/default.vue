@@ -116,8 +116,8 @@
               
               <!-- ログイン時：メニューバー（ロールに応じて表示） -->
               <nav v-else class="flex items-center gap-4">
-                <!-- team_select.vue の場合：ログアウトのみ -->
-                <template v-if="route.path === '/team_select'">
+                <!-- 特定ページでログアウトのみ表示 -->
+                <template v-if="route.path === '/team_select' || route.path === '/team_join' || route.path === '/manager/teams/create'">
                   <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
                     ログアウト
                   </button>
