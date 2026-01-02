@@ -1,10 +1,10 @@
 <template>
   <div class="flex flex-col flex-1">
     <!-- メインコンテンツ -->
-    <main class="flex-1 p-8 flex items-center justify-center">
+    <main class="flex-1 p-4 sm:p-8 flex items-center justify-center">
       <div class="w-full max-w-2xl">
                 <!-- ヘッダー -->
-                <div class="mb-6">
+                <div class="mb-4 sm:mb-6">
                     <NuxtLink :to="isEditMode ? '/team_info' : '/team_select'"
                         class="inline-flex items-center text-sm text-white hover:text-gray-100 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -12,12 +12,12 @@
                         </svg>
                         {{ isEditMode ? 'チーム情報に戻る' : 'チーム選択に戻る' }}
                     </NuxtLink>
-                    <h1 class="text-3xl font-bold text-gray-900">{{ isEditMode ? 'チーム情報編集' : '新規チーム作成' }}</h1>
-                    <p class="text-gray-700 mt-2">{{ isEditMode ? 'チーム情報を編集してください' : 'チーム情報を入力してください' }}</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">{{ isEditMode ? 'チーム情報編集' : '新規チーム作成' }}</h1>
+                    <p class="text-sm sm:text-base text-gray-700 mt-2">{{ isEditMode ? 'チーム情報を編集してください' : 'チーム情報を入力してください' }}</p>
                 </div>
 
                 <!-- フォーム -->
-                <div class="bg-white rounded-xl shadow-xl p-8">
+                <div class="bg-white rounded-xl shadow-xl p-4 sm:p-8">
                     <form @submit.prevent="handleSubmit" class="space-y-6">
                         <!-- チーム名 -->
                         <div>
@@ -34,7 +34,7 @@
                             <label for="teamLogo" class="block text-sm font-medium text-gray-700 mb-2">
                                 チームロゴ
                             </label>
-                            <div class="flex items-center gap-4">
+                            <div class="flex flex-col sm:flex-row items-center gap-4">
                                 <!-- プレビュー -->
                                 <div
                                     class="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
@@ -48,7 +48,7 @@
                                 </div>
 
                                 <!-- ファイル選択 -->
-                                <div class="flex-1">
+                                <div class="w-full sm:flex-1">
                                     <input id="teamLogo" ref="fileInput" type="file" accept="image/*"
                                         @change="handleFileChange" class="hidden" />
                                     <button type="button" @click="fileInput?.click()"
@@ -81,13 +81,13 @@
                         </div>
 
                         <!-- ボタン -->
-                        <div class="flex gap-3 pt-4">
+                        <div class="flex flex-col sm:flex-row gap-3 pt-4">
                             <button type="button" @click="$router.back()"
-                                class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                class="w-full sm:flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
                                 キャンセル
                             </button>
                             <button type="submit" :disabled="loading || !formData.teamName"
-                                class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full sm:flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                                 {{ loading ? (isEditMode ? '更新中...' : '作成中...') : (isEditMode ? 'チーム情報を更新' : 'チームを作成') }}
                             </button>
                         </div>

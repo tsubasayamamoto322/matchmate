@@ -1,17 +1,17 @@
 <template>
     <div class="flex flex-col flex-1">
         <!-- メインコンテンツ -->
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-4 sm:p-8">
             <div class="max-w-6xl mx-auto">
                 <!-- ヘッダーセクション -->
-                <div class="mb-8">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="mb-6 sm:mb-8">
+                    <div class="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center mb-4">
                         <div>
-                            <h1 class="text-3xl font-bold text-gray-900">ようこそ、{{ userData?.user_name || 'ゲスト' }}さん</h1>
+                            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">ようこそ、{{ userData?.user_name || 'ゲスト' }}さん</h1>
                         </div>
                         <!-- 監督専用：試合作成ボタン -->
                         <NuxtLink v-if="isManager" to="/manager/games/game_create"
-                            class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2">
+                            class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 4v16m8-8H4" />
@@ -22,46 +22,44 @@
                 </div>
 
                 <!-- 今後の試合セクション -->
-                <div class="mb-8">
+                <div class="mb-6 sm:mb-8">
                     <!-- <h2 class="text-xl font-bold text-gray-900 mb-4">次の試合</h2> -->
 
                     <!-- 次の試合カード -->
-                    <div v-if="nextMatch" class="bg-white rounded-xl shadow-lg p-6 mb-6">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-6">
-                                <div class="text-center">
-                                    <p class="text-sm text-gray-500 mb-1">次の試合</p>
-                                    <h3 class="text-2xl font-bold text-gray-900">vs {{ nextMatch.opponent_team }}</h3>
-                                    <p class="text-sm text-gray-600 mt-2">{{ formatDate(nextMatch.game_date) }}（{{
-                                        formatDayOfWeek(nextMatch.game_date) }}）・{{ formatTime(nextMatch.game_time) }}
-                                    </p>
-                                    <p class="text-sm text-gray-500 mt-2">{{ nextMatch.location || '場所未定' }}</p>
-                                </div>
-                                <div class="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                                    <img v-if="nextMatch.opponent_logo" :src="nextMatch.opponent_logo" alt="対戦チーム"
-                                        class="w-full h-full object-cover rounded-lg" />
-                                    <svg v-else class="w-16 h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                        <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
-                                    </svg>
-                                </div>
+                    <div v-if="nextMatch" class="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6">
+                        <div class="flex flex-col gap-4">
+                            <div class="text-center">
+                                <p class="text-sm text-gray-500 mb-1">次の試合</p>
+                                <h3 class="text-xl sm:text-2xl font-bold text-gray-900">vs {{ nextMatch.opponent_team }}</h3>
+                                <p class="text-sm text-gray-600 mt-2">{{ formatDate(nextMatch.game_date) }}（{{
+                                    formatDayOfWeek(nextMatch.game_date) }}）・{{ formatTime(nextMatch.game_time) }}
+                                </p>
+                                <p class="text-sm text-gray-500 mt-2">{{ nextMatch.location || '場所未定' }}</p>
                             </div>
-                            <div class="text-right flex flex-col gap-3">
+                            <div class="w-24 h-24 sm:w-32 sm:h-32 mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
+                                <img v-if="nextMatch.opponent_logo" :src="nextMatch.opponent_logo" alt="対戦チーム"
+                                    class="w-full h-full object-cover rounded-lg" />
+                                <svg v-else class="w-12 h-12 sm:w-16 sm:h-16 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
+                                </svg>
+                            </div>
+                            <div class="flex flex-col gap-2">
                                 <!-- 選手用：出欠ステータス表示 -->
-                                <div v-if="isPlayer && nextMatch.attendance_status">
+                                <div v-if="isPlayer && nextMatch.attendance_status" class="text-center">
                                     <span class="px-3 py-1 text-sm rounded-full"
                                         :class="getStatusClass(nextMatch.attendance_status)">
                                         {{ getStatusText(nextMatch.attendance_status) }}
                                     </span>
                                 </div>
                                 <!-- 監督用：未回答者ステータス表示 -->
-                                <div v-else-if="isManager && nextMatch.attendance_status">
+                                <div v-else-if="isManager && nextMatch.attendance_status" class="text-center">
                                     <span class="px-3 py-1 text-sm rounded-full"
                                         :class="nextMatch.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
                                         {{ nextMatch.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
                                     </span>
                                 </div>
                                 <NuxtLink :to="`/games/${nextMatch.id}`"
-                                    class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors">
+                                    class="w-full px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors text-center">
                                     詳細を見る
                                 </NuxtLink>
                             </div>
@@ -70,12 +68,12 @@
                 </div>
 
                 <!-- 出席セクション（試合表示の例） -->
-                <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
-                    <div class="flex items-center justify-between mb-4">
-                        <h3 class="text-lg font-bold text-gray-900">直近の試合</h3>
-                        <div class="flex gap-2">
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-3">
+                        <h3 class="text-base sm:text-lg font-bold text-gray-900">直近の試合</h3>
+                        <div class="flex gap-2 w-full sm:w-auto">
                             <NuxtLink to="/schedule"
-                                class="px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors">
+                                class="w-full sm:w-auto px-4 py-2 bg-green-100 text-green-700 text-sm font-medium rounded-lg hover:bg-green-200 transition-colors text-center">
                                 すべての試合を表示する
                             </NuxtLink>
                         </div>
@@ -83,33 +81,33 @@
 
                     <div class="space-y-3">
                         <div v-for="match in upcomingMatches" :key="match.id"
-                            class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-3">
+                            <div class="flex items-center gap-4 w-full sm:w-auto">
+                                <div class="w-12 h-12 flex-shrink-0 bg-gray-200 rounded-lg flex items-center justify-center">
                                     <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
                                         <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
                                     </svg>
                                 </div>
-                                <div>
-                                    <p class="font-semibold text-gray-900">{{ match.opponent_team }}</p>
-                                    <p class="text-sm text-gray-600">{{ formatDate(match.game_date) }}（{{
+                                <div class="flex-1 sm:flex-none">
+                                    <p class="font-semibold text-sm sm:text-base text-gray-900">{{ match.opponent_team }}</p>
+                                    <p class="text-xs sm:text-sm text-gray-600">{{ formatDate(match.game_date) }}（{{
                                         formatDayOfWeek(match.game_date) }}）・{{ formatTime(match.game_time) }}</p>
-                                    <p class="text-sm text-gray-500">{{ match.location || '場所未定' }}</p>
+                                    <p class="text-xs sm:text-sm text-gray-500">{{ match.location || '場所未定' }}</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
                                 <!-- 選手用：出欠ステータス表示 -->
-                                <span v-if="isPlayer && match.attendance_status" class="px-3 py-1 text-sm rounded-full"
+                                <span v-if="isPlayer && match.attendance_status" class="px-3 py-1 text-xs sm:text-sm rounded-full"
                                     :class="getStatusClass(match.attendance_status)">
                                     {{ getStatusText(match.attendance_status) }}
                                 </span>
                                 <!-- 監督用：未回答者ステータス表示 -->
-                                <span v-else-if="isManager && match.attendance_status" class="px-3 py-1 text-sm rounded-full"
+                                <span v-else-if="isManager && match.attendance_status" class="px-3 py-1 text-xs sm:text-sm rounded-full"
                                     :class="match.attendance_status === 'unanswered' ? 'bg-yellow-100 text-yellow-700' : 'bg-green-100 text-green-700'">
                                     {{ match.attendance_status === 'unanswered' ? '未回答者あり' : '全員回答済み' }}
                                 </span>
                                 <NuxtLink :to="`/games/${match.id}`"
-                                    class="px-4 py-2 border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                                    class="px-3 py-1 sm:px-4 sm:py-2 border border-gray-300 text-gray-700 text-xs sm:text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
                                     詳細
                                 </NuxtLink>
                             </div>
@@ -118,9 +116,9 @@
                 </div>
 
                 <!-- クイックアクションセクション -->
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <h3 class="text-lg font-bold text-gray-900 mb-4">クイックアクション</h3>
-                    <div class="grid grid-cols-2 gap-4">
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-6">
+                    <h3 class="text-base sm:text-lg font-bold text-gray-900 mb-4">クイックアクション</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <NuxtLink to="/team_info"
                             class="relative p-4 border-2 border-gray-200 rounded-lg hover:border-green-400 hover:bg-green-50 transition-all text-center block">
                             <svg class="w-8 h-8 mx-auto mb-2 text-gray-600" fill="none" stroke="currentColor"

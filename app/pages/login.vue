@@ -1,7 +1,7 @@
 <template>
   <div class="bg-gradient-to-b from-green-400 to-green-600 flex flex-col flex-1">
     <!-- メインコンテンツ -->
-    <main class="flex-1 p-8 flex items-center justify-center">
+    <main class="flex-1 p-4 sm:p-8 flex items-center justify-center">
     <div class="w-full max-w-md">
       <div class="mb-4">
         <h1 class="text-white text-2xl font-bold">ログイン</h1>

@@ -1,10 +1,10 @@
 <template>
     <div class="flex flex-col flex-1">
         <!-- メインコンテンツ -->
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-4 sm:p-8">
             <div class="max-w-4xl mx-auto">
                 <!-- ヘッダー -->
-                <div class="mb-6">
+                <div class="mb-4 sm:mb-6">
                     <NuxtLink to="/team_top"
                         class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,12 +15,12 @@
                 </div>
 
                 <!-- 試合情報セクション -->
-                <div v-if="match" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                    <div class="flex items-center justify-between mb-6">
-                        <h1 class="text-3xl font-bold text-gray-900">試合詳細</h1>
+                <div v-if="match" class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+                    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">試合詳細</h1>
                         <!-- 監督用編集ボタン -->
                         <button v-if="isManager && !isEditingMatch" @click="startEditMatch"
-                            class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2">
+                            class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                             </svg>
@@ -29,8 +29,8 @@
                     </div>
                     
                     <!-- 編集モード -->
-                    <div v-if="isEditingMatch && isManager" class="mb-8 p-6 bg-gray-50 rounded-lg border-2 border-green-200">
-                        <h2 class="text-xl font-bold text-gray-900 mb-4">試合情報を編集</h2>
+                    <div v-if="isEditingMatch && isManager" class="mb-6 sm:mb-8 p-4 sm:p-6 bg-gray-50 rounded-lg border-2 border-green-200">
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4">試合情報を編集</h2>
                         <form @submit.prevent="saveMatch" class="space-y-4">
                             <!-- 対戦相手 -->
                             <div>
@@ -74,13 +74,13 @@
                             </div>
 
                             <!-- ボタン -->
-                            <div class="flex gap-3 pt-4">
+                            <div class="flex flex-col sm:flex-row gap-3 pt-4">
                                 <button type="button" @click="cancelEditMatch"
-                                    class="flex-1 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                    class="w-full sm:flex-1 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
                                     キャンセル
                                 </button>
                                 <button type="submit" :disabled="isSavingMatch"
-                                    class="flex-1 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                    class="w-full sm:flex-1 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                                     {{ isSavingMatch ? '保存中...' : '保存' }}
                                 </button>
                             </div>
@@ -88,47 +88,47 @@
                     </div>
                     
                     <!-- 試合情報グリッド（表示モード） -->
-                    <div v-if="!isEditingMatch" class="grid grid-cols-2 gap-6 mb-8">
+                    <div v-if="!isEditingMatch" class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
                         <!-- 対戦相手 -->
                         <div>
                             <p class="text-sm font-medium text-gray-500 mb-1">対戦相手</p>
-                            <p class="text-lg font-semibold text-gray-900">{{ match.opponent_team }}</p>
+                            <p class="text-base sm:text-lg font-semibold text-gray-900">{{ match.opponent_team }}</p>
                         </div>
 
                         <!-- 試合日付 -->
                         <div>
                             <p class="text-sm font-medium text-gray-500 mb-1">試合日</p>
-                            <p class="text-lg font-semibold text-gray-900">{{ formatDate(match.game_date) }}（{{ formatDayOfWeek(match.game_date) }}）</p>
+                            <p class="text-base sm:text-lg font-semibold text-gray-900">{{ formatDate(match.game_date) }}（{{ formatDayOfWeek(match.game_date) }}）</p>
                         </div>
 
                         <!-- 試合時間 -->
                         <div>
                             <p class="text-sm font-medium text-gray-500 mb-1">試合時間</p>
-                            <p class="text-lg font-semibold text-gray-900">{{ formatTime(match.game_time) }}</p>
+                            <p class="text-base sm:text-lg font-semibold text-gray-900">{{ formatTime(match.game_time) }}</p>
                         </div>
 
                         <!-- 場所 -->
                         <div>
                             <p class="text-sm font-medium text-gray-500 mb-1">場所</p>
-                            <p class="text-lg font-semibold text-gray-900">{{ match.location || '未定' }}</p>
+                            <p class="text-base sm:text-lg font-semibold text-gray-900">{{ match.location || '未定' }}</p>
                         </div>
 
                         <!-- 備考 -->
-                        <div v-if="match.notes" class="col-span-2">
+                        <div v-if="match.notes" class="sm:col-span-2">
                             <p class="text-sm font-medium text-gray-500 mb-1">備考</p>
-                            <p class="text-gray-900">{{ match.notes }}</p>
+                            <p class="text-sm sm:text-base text-gray-900">{{ match.notes }}</p>
                         </div>
                     </div>
 
                     <!-- 出欠回答セクション（選手用） -->
-                    <div v-if="isPlayer" class="border-t border-gray-200 pt-8">
-                        <h2 class="text-lg font-bold text-gray-900 mb-4">出欠回答</h2>
-                        <div class="flex gap-3">
+                    <div v-if="isPlayer" class="border-t border-gray-200 pt-6 sm:pt-8">
+                        <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-4">出欠回答</h2>
+                        <div class="flex flex-col sm:flex-row gap-3">
                             <button
                                 @click="submitAttendance('participate')"
                                 :disabled="isSubmittingAttendance"
                                 :class="[
-                                    'px-6 py-3 rounded-lg font-medium transition-colors',
+                                    'w-full sm:flex-1 px-6 py-3 rounded-lg font-medium transition-colors',
                                     myAttendance === 'participate'
                                         ? 'bg-green-600 text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -142,7 +142,7 @@
                                 @click="submitAttendance('absent')"
                                 :disabled="isSubmittingAttendance"
                                 :class="[
-                                    'px-6 py-3 rounded-lg font-medium transition-colors',
+                                    'w-full sm:flex-1 px-6 py-3 rounded-lg font-medium transition-colors',
                                     myAttendance === 'absent'
                                         ? 'bg-red-600 text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -156,7 +156,7 @@
                                 @click="submitAttendance('unanswered')"
                                 :disabled="isSubmittingAttendance"
                                 :class="[
-                                    'px-6 py-3 rounded-lg font-medium transition-colors',
+                                    'w-full sm:flex-1 px-6 py-3 rounded-lg font-medium transition-colors',
                                     myAttendance === 'unanswered'
                                         ? 'bg-yellow-600 text-white'
                                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -173,8 +173,8 @@
                 </div>
 
                 <!-- 出欠状況セクション -->
-                <div class="bg-white rounded-xl shadow-lg p-8">
-                    <h2 class="text-lg font-bold text-gray-900 mb-6">チーム内の出欠状況</h2>
+                <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8">
+                    <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-4 sm:mb-6">チーム内の出欠状況</h2>
 
                     <div v-if="loading" class="text-center py-8">
                         <p class="text-gray-500">読み込み中...</p>
@@ -186,7 +186,7 @@
 
                     <div v-else class="space-y-2">
                         <div v-for="attendance in attendanceList" :key="attendance.player_id"
-                            class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                            class="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 sm:p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                             <div class="flex items-center gap-3">
                                 <!-- プレイヤーアバター -->
                                 <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
@@ -197,11 +197,11 @@
                                     </div>
                                 </div>
                                 <div>
-                                    <p class="font-medium text-gray-900">{{ attendance.user_name }}</p>
+                                    <p class="text-sm font-medium text-gray-900">{{ attendance.user_name }}</p>
                                 </div>
                             </div>
                             <span :class="[
-                                'px-4 py-2 rounded-full text-sm font-medium',
+                                'px-3 py-1 sm:px-4 sm:py-2 rounded-full text-xs sm:text-sm font-medium',
                                 getStatusClass(attendance.status)
                             ]">
                                 {{ getStatusText(attendance.status) }}

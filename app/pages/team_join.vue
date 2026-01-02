@@ -1,16 +1,16 @@
 <template>
   <div class="flex flex-col flex-1">
-    <main class="flex-1 p-8">
+    <main class="flex-1 p-4 sm:p-8">
       <div class="max-w-4xl mx-auto">
         <!-- ヘッダー -->
-        <div class="mb-8 text-center">
-          <h1 class="text-3xl font-bold text-gray-900 mb-2">チームに参加</h1>
-          <p class="text-gray-600">参加したいチームを選択してください</p>
+        <div class="mb-6 sm:mb-8 text-center">
+          <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">チームに参加</h1>
+          <p class="text-sm sm:text-base text-gray-600">参加したいチームを選択してください</p>
         </div>
 
         <!-- 未参加チーム一覧 -->
-        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
-          <h2 class="text-2xl font-bold text-gray-900 mb-6">参加申請可能なチーム</h2>
+        <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+          <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">参加申請可能なチーム</h2>
 
           <div v-if="loadingAvailableTeams" class="text-center py-8">
             <p class="text-gray-500">読み込み中...</p>
@@ -26,9 +26,9 @@
             <div 
               v-for="team in availableTeams" 
               :key="team.id"
-              class="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-4"
             >
-              <div class="flex items-center gap-4">
+              <div class="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
                 <!-- チームロゴ -->
                 <div class="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
                   <img v-if="team.team_logo_url" :src="team.team_logo_url" :alt="team.team_name" class="w-full h-full object-cover" />
@@ -36,8 +36,8 @@
                 </div>
                 
                 <!-- チーム情報 -->
-                <div>
-                  <h3 class="font-bold text-gray-900 text-lg">{{ team.team_name || '不明なチーム' }}</h3>
+                <div class="text-center sm:text-left">
+                  <h3 class="font-bold text-gray-900 text-base sm:text-lg">{{ team.team_name || '不明なチーム' }}</h3>
                   <p class="text-sm text-gray-600">{{ team.address }}</p>
                 </div>
               </div>
@@ -45,7 +45,7 @@
               <button
                 @click="handleJoinTeam(team)"
                 :disabled="joiningTeamId === team.id"
-                class="px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {{ joiningTeamId === team.id ? '参加中...' : '参加する' }}
               </button>
