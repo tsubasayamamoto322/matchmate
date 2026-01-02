@@ -152,10 +152,10 @@ const registerGame = async () => {
 <template>
     <div class="flex flex-col flex-1">
         <!-- メインコンテンツ -->
-        <main class="flex-1 p-8 flex items-center justify-center">
+        <main class="flex-1 p-4 sm:p-8 flex items-center justify-center">
             <div class="w-full max-w-2xl">
                 <!-- ヘッダー -->
-                <div class="mb-6">
+                <div class="mb-4 sm:mb-6">
                     <NuxtLink to="/team_top"
                         class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,12 +163,12 @@ const registerGame = async () => {
                         </svg>
                         チームトップに戻る
                     </NuxtLink>
-                    <h1 class="text-3xl font-bold text-gray-900">試合を作成</h1>
-                    <p class="text-gray-700 mt-2">試合情報を入力してください</p>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">試合を作成</h1>
+                    <p class="text-sm sm:text-base text-gray-700 mt-2">試合情報を入力してください</p>
                 </div>
 
                 <!-- フォーム -->
-                <div class="bg-white rounded-xl shadow-xl p-8">
+                <div class="bg-white rounded-xl shadow-xl p-4 sm:p-8">
                     <form @submit.prevent="registerGame" class="space-y-6">
                         <!-- 対戦相手 -->
                         <div>
@@ -226,13 +226,13 @@ const registerGame = async () => {
                         </div>
 
                         <!-- ボタン -->
-                        <div class="flex gap-3 pt-4">
+                        <div class="flex flex-col sm:flex-row gap-3 pt-4">
                             <NuxtLink to="/team_top"
-                                class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                class="w-full sm:flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium text-center">
                                 キャンセル
                             </NuxtLink>
                             <button type="submit" :disabled="isLoading || !opponentTeam || !date || !time || !location"
-                                class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full sm:flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                                 {{ isLoading ? '登録中...' : '試合を登録' }}
                             </button>
                         </div>

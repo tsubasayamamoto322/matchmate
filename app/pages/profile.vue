@@ -1,10 +1,10 @@
 <template>
     <div class="flex flex-col flex-1">
         <!-- メインコンテンツ -->
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-4 sm:p-8">
             <div class="max-w-4xl mx-auto">
                 <!-- ヘッダー -->
-                <div class="mb-6">
+                <div class="mb-4 sm:mb-6">
                     <NuxtLink to="/team_top"
                         class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,52 +15,50 @@
                 </div>
 
                 <!-- 表示モード -->
-                <div v-if="!isEditing && userData" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                    <div class="flex items-start justify-between gap-8">
-                        <div class="flex items-start gap-8 flex-grow">
+                <div v-if="!isEditing && userData" class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+                    <div class="flex flex-col sm:flex-row items-start gap-4 sm:gap-8">
+                        <div class="mx-auto sm:mx-0">
                             <!-- アバター -->
-                            <div class="flex-shrink-0">
-                                <div class="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-300 to-blue-600 flex items-center justify-center shadow-lg">
-                                    <img v-if="userData.avatar_url" :src="userData.avatar_url" :alt="userData.user_name"
-                                        class="w-full h-full object-cover" />
-                                    <div v-else class="text-5xl text-white font-bold">
-                                        {{ userData.user_name?.charAt(0) || '？' }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- ユーザー情報 -->
-                            <div class="flex-grow">
-                                <div class="mb-6">
-                                    <h1 class="text-4xl font-bold text-gray-900 mb-2">{{ userData.user_name }}</h1>
-                                    <p class="text-gray-600">{{ roleText }}</p>
-                                </div>
-
-                                <div class="space-y-4">
-                                    <!-- メールアドレス -->
-                                    <div>
-                                        <p class="text-sm font-medium text-gray-500 mb-1">メールアドレス</p>
-                                        <p class="text-gray-900">{{ userData.email || '-' }}</p>
-                                    </div>
+                            <div class="w-32 h-32 rounded-full overflow-hidden bg-gradient-to-br from-blue-300 to-blue-600 flex items-center justify-center shadow-lg flex-shrink-0">
+                                <img v-if="userData.avatar_url" :src="userData.avatar_url" :alt="userData.user_name"
+                                    class="w-full h-full object-cover" />
+                                <div v-else class="text-5xl text-white font-bold">
+                                    {{ userData.user_name?.charAt(0) || '？' }}
                                 </div>
                             </div>
                         </div>
 
-                        <!-- 編集ボタン -->
-                        <button @click="startEdit"
-                            class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2 flex-shrink-0">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                            </svg>
-                            編集
-                        </button>
+                        <!-- ユーザー情報 -->
+                        <div class="flex-grow w-full text-center sm:text-left">
+                            <div class="mb-4 sm:mb-6">
+                                <h1 class="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{{ userData.user_name }}</h1>
+                                <p class="text-sm sm:text-base text-gray-600">{{ roleText }}</p>
+                            </div>
+
+                            <div class="space-y-4">
+                                <!-- メールアドレス -->
+                                <div>
+                                    <p class="text-sm font-medium text-gray-500 mb-1">メールアドレス</p>
+                                    <p class="text-sm sm:text-base text-gray-900">{{ userData.email || '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                    
+                    <!-- 編集ボタン -->
+                    <button @click="startEdit"
+                        class="w-full sm:w-auto mt-4 sm:mt-0 px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        編集
+                    </button>
                 </div>
 
                 <!-- 編集モード -->
-                <div v-if="isEditing && userData" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                    <h2 class="text-2xl font-bold text-gray-900 mb-6">プロフィール編集</h2>
+                <div v-if="isEditing && userData" class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">プロフィール編集</h2>
 
                     <form @submit.prevent="saveProfile" class="space-y-6">
                         <!-- アバター編集 -->
@@ -114,13 +112,13 @@
                         </div>
 
                         <!-- ボタン -->
-                        <div class="flex gap-3 pt-4">
+                        <div class="flex flex-col sm:flex-row gap-3 pt-4">
                             <button type="button" @click="cancelEdit"
-                                class="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
+                                class="w-full sm:flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
                                 キャンセル
                             </button>
                             <button type="submit" :disabled="isSaving || !editFormData.user_name || !editFormData.email"
-                                class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                class="w-full sm:flex-1 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                                 {{ isSaving ? '保存中...' : '保存' }}
                             </button>
                         </div>

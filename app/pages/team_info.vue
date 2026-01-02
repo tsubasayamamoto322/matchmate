@@ -1,10 +1,10 @@
 <template>
     <div class="flex flex-col flex-1">
         <!-- メインコンテンツ -->
-        <main class="flex-1 p-8">
+        <main class="flex-1 p-4 sm:p-8">
             <div class="max-w-6xl mx-auto">
                 <!-- ヘッダー -->
-                <div class="mb-6">
+                <div class="mb-4 sm:mb-6">
                     <NuxtLink to="/team_top"
                         class="inline-flex items-center text-sm text-gray-600 hover:text-gray-900 mb-4">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -15,13 +15,13 @@
                 </div>
 
                 <!-- チーム情報カード -->
-                <div v-if="teamData" class="bg-white rounded-xl shadow-lg p-8 mb-8">
-                    <div class="flex items-start justify-between mb-6">
-                        <h1 class="text-3xl font-bold text-gray-900">チーム詳細</h1>
+                <div v-if="teamData" class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+                    <div class="flex flex-col sm:flex-row items-start justify-between mb-6 gap-3">
+                        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900">チーム詳細</h1>
                         <!-- 監督専用：編集ボタン -->
                         <NuxtLink v-if="isManager && canEdit"
                             to="/manager/teams/create?edit=true"
-                            class="px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center gap-2">
+                            class="w-full sm:w-auto px-4 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition-colors shadow-lg flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -31,38 +31,38 @@
                     </div>
 
                     <div class="border-t border-gray-200 pt-6">
-                        <h2 class="text-xl font-bold text-gray-900 mb-6">チーム情報</h2>
+                        <h2 class="text-lg sm:text-xl font-bold text-gray-900 mb-4 sm:mb-6">チーム情報</h2>
                         
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
                             <!-- 左側：テキスト情報 -->
-                            <div class="space-y-6">
+                            <div class="space-y-4 sm:space-y-6">
                                 <!-- チーム名 -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-500 mb-2">チーム名</label>
-                                    <p class="text-lg font-semibold text-gray-900">{{ teamData.team_name }}</p>
+                                    <p class="text-base sm:text-lg font-semibold text-gray-900">{{ teamData.team_name }}</p>
                                 </div>
 
                                 <!-- 監督名 -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-500 mb-2">監督</label>
-                                    <p class="text-lg font-semibold text-gray-900">{{ managerName }}</p>
+                                    <p class="text-base sm:text-lg font-semibold text-gray-900">{{ managerName }}</p>
                                 </div>
 
                                 <!-- 所在地 -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-500 mb-2">所在地</label>
-                                    <p class="text-lg text-gray-900">{{ teamData.address || '未設定' }}</p>
+                                    <p class="text-base sm:text-lg text-gray-900">{{ teamData.address || '未設定' }}</p>
                                 </div>
                             </div>
 
                             <!-- 右側：チームロゴ -->
                             <div class="flex justify-center items-center">
                                 <div
-                                    class="w-48 h-48 bg-gradient-to-br from-green-300 to-green-600 rounded-2xl overflow-hidden shadow-xl">
+                                    class="w-32 h-32 sm:w-48 sm:h-48 bg-gradient-to-br from-green-300 to-green-600 rounded-2xl overflow-hidden shadow-xl">
                                     <img v-if="teamData.team_logo_url" :src="teamData.team_logo_url"
                                         :alt="teamData.team_name" class="w-full h-full object-cover" />
                                     <div v-else class="w-full h-full flex items-center justify-center">
-                                        <svg class="w-24 h-24 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                        <svg class="w-16 h-16 sm:w-24 sm:h-24 text-white" fill="currentColor" viewBox="0 0 20 20">
                                             <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
                                         </svg>
                                     </div>
@@ -73,8 +73,8 @@
                 </div>
 
                 <!-- ロスター（所属選手一覧） -->
-                <div class="bg-white rounded-xl shadow-lg mb-8">
-                    <h2 class="text-xl font-bold text-gray-900 p-6">所属選手一覧</h2>
+                <div class="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
+                    <h2 class="text-lg sm:text-xl font-bold text-gray-900 p-4 sm:p-6">所属選手一覧</h2>
                     
                     <div v-if="loading" class="text-center py-8">
                         <p class="text-gray-500">読み込み中...</p>
@@ -86,8 +86,8 @@
 
                     <div v-else class="space-y-2">
                         <div v-for="player in playersApproved" :key="player.id"
-                            class="flex items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                            <div class="flex items-center gap-3 flex-1 min-w-0">
+                            class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                            <div class="flex items-center gap-3 w-full sm:w-auto sm:flex-1 min-w-0">
                                 <div class="w-10 h-10 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                                     <img v-if="player.avatar_url" :src="player.avatar_url" :alt="player.user_name" 
                                         class="w-full h-full object-cover" />
@@ -102,7 +102,7 @@
                             <!-- 監督専用：チームから削除ボタン -->
                             <button v-if="isManager" @click="removePlayerFromTeam(player.id)"
                                 :disabled="processingPlayerId === player.id"
-                                class="px-3 py-1 text-sm font-semibold rounded-full transition-colors flex-shrink-0"
+                                class="w-full sm:w-auto px-3 py-1 text-sm font-semibold rounded-full transition-colors flex-shrink-0"
                                 :class="{ 
                                     'bg-red-500 text-white hover:bg-red-600': processingPlayerId !== player.id,
                                     'bg-red-300 text-gray-700 cursor-not-allowed': processingPlayerId === player.id 
@@ -113,8 +113,8 @@
                     </div>
                 </div>
                 <!-- ロスター（承認待ち選手一覧） -->
-                  <div class="bg-white rounded-xl shadow-lg mb-8">
-                      <h2 class="text-xl font-bold text-gray-900 p-6">承認待ち選手一覧</h2>
+                  <div class="bg-white rounded-xl shadow-lg mb-6 sm:mb-8">
+                      <h2 class="text-lg sm:text-xl font-bold text-gray-900 p-4 sm:p-6">承認待ち選手一覧</h2>
                       
                       <div v-if="loading" class="text-center py-8">
                           <p class="text-gray-500">読み込み中...</p>

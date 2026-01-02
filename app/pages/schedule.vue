@@ -180,16 +180,16 @@ onMounted(async () => {
 <template>
    
   <div class="flex-1">
-       
-    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 max-w-4xl">
-           
-      <h1 class="text-3xl font-bold text-gray-800 mb-6">スケジュール</h1>
-         
-      <div class="flex border-b border-gray-300 mb-8">
+       
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 max-w-4xl">
+           
+      <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4 sm:mb-6">スケジュール</h1>
+         
+      <div class="flex border-b border-gray-300 mb-6 sm:mb-8">
         <button
           @click="activeTab = 'future'"
           :class="[
-            'px-6 py-2 text-sm',
+            'flex-1 py-3 px-2 sm:px-4 text-sm sm:text-base',
             activeTab === 'future' ? activeTabClass : inactiveTabClass,
           ]"
         >
@@ -198,17 +198,17 @@ onMounted(async () => {
         <button
           @click="activeTab = 'past'"
           :class="[
-            'px-6 py-2 text-sm',
+            'flex-1 py-3 px-2 sm:px-4 text-sm sm:text-base',
             activeTab === 'past' ? activeTabClass : inactiveTabClass,
           ]"
         >
           過去の試合
         </button>
-             
+             
       </div>
 
       <div>
-        <h2 class="text-xl font-semibold text-gray-700 mb-6">
+        <h2 class="text-lg sm:text-xl font-semibold text-gray-700 mb-4 sm:mb-6">
           {{ activeTab === "future" ? "今後の試合" : "過去の試合" }}
         </h2>
 
@@ -217,55 +217,40 @@ onMounted(async () => {
             <div
               v-for="match in currentMatches"
               :key="match.id"
-              class="bg-white rounded-xl shadow-lg p-6 flex items-center gap-4 hover:shadow-xl transition-shadow"
+              class="bg-white rounded-xl shadow-lg p-4 sm:p-6 border rounded-lg"
             >
-              <!-- チームロゴ -->
-              <div class="flex-shrink-0">
-                <div
-                  class="w-20 h-20 bg-gradient-to-br from-blue-300 to-blue-600 rounded-lg overflow-hidden flex items-center justify-center shadow-md"
-                >
-                  <svg
-                    class="w-10 h-10 text-white"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
+              <div class="flex flex-col gap-3">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div class="flex-grow">
+                    <div class="flex items-baseline gap-2 mb-1">
+                      <span class="text-xs sm:text-sm font-medium text-gray-500"
+                        >対戦相手</span
+                      >
+                      <h3 class="text-base sm:text-lg font-bold text-gray-900">
+                        {{ match.opponent_team }}
+                      </h3>
+                    </div>
+                    <div class="text-xs sm:text-sm text-gray-600 mb-2">
+                      {{ formatMatchDateTime(match) }}
+                    </div>
+                    <div v-if="match.location" class="text-xs sm:text-sm text-gray-500">
+                      {{ match.location }}
+                    </div>
+                    <div
+                      v-if="match.notes"
+                      class="text-xs sm:text-sm text-gray-500 italic mt-1"
+                    >
+                      {{ match.notes }}
+                    </div>
+                  </div>
+                  <!-- アクションボタン -->
+                  <NuxtLink
+                    :to="`/games/${match.id}`"
+                    class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-center"
                   >
-                    <path d="M10 2a8 8 0 100 16 8 8 0 000-16z" />
-                  </svg>
+                    詳細を見る
+                  </NuxtLink>
                 </div>
-              </div>
-
-              <!-- 試合情報 -->
-              <div class="flex-grow">
-                <div class="flex items-baseline gap-2 mb-1">
-                  <span class="text-sm font-medium text-gray-500"
-                    >対戦相手</span
-                  >
-                  <h3 class="text-lg font-bold text-gray-900">
-                    {{ match.opponent_team }}
-                  </h3>
-                </div>
-                <div class="text-sm text-gray-600 mb-2">
-                  {{ formatMatchDateTime(match) }}
-                </div>
-                <div v-if="match.location" class="text-sm text-gray-500">
-                  {{ match.location }}
-                </div>
-                <div
-                  v-if="match.notes"
-                  class="text-sm text-gray-500 italic mt-1"
-                >
-                  {{ match.notes }}
-                </div>
-              </div>
-
-              <!-- アクションボタン -->
-              <div class="flex-shrink-0">
-                <NuxtLink
-                  :to="`/games/${match.id}`"
-                  class="px-4 py-2 text-sm font-medium text-blue-600 border-2 border-blue-200 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                >
-                  詳細を見る
-                </NuxtLink>
               </div>
             </div>
           </template>

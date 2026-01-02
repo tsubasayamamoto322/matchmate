@@ -11,6 +11,9 @@
   // 実際に表示するログイン状態（強制未ログイン表示の場合はfalse）
   const displayIsLoggedIn = computed(() => !forceGuestMenu.value && isLoggedIn.value)
   
+  // ハンバーガーメニュー開閉状態
+  const isMenuOpen = ref(false)
+  
   // 初期ロール情報を取得
   onMounted(async () => {
     await fetchUserRole()
@@ -18,9 +21,15 @@
   
   // ログアウト処理
   const handleLogout = async () => {
+    isMenuOpen.value = false
     if (confirm('ログアウトしますか？')) {
       await logout()
     }
+  }
+  
+  // メニューアイテムをクリックしたときメニューを閉じる
+  const closeMenu = () => {
+    isMenuOpen.value = false
   }
   </script>
   
@@ -87,77 +96,130 @@
           </div>
   
           <!-- ヘッダー（固定） -->
-          <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gray-900 rounded flex items-center justify-center">
-                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-                  </svg>
+          <header class="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 right-0 z-50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex justify-between items-center">
+              <!-- ロゴと企業名 -->
+              <div class="flex items-center gap-2 sm:gap-3">
+                <div class="w-8 h-8 sm:w-10 sm:h-10">
+                  <img src="@/assets/images/logo.png" alt="MatchMate" class="w-full h-full object-contain" />
                 </div>
-                  <!--未ログイン時： トップページ-->
-                  <div v-if="!displayIsLoggedIn" class="flex gap-3">
-                    <NuxtLink to="/" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
-                  </div>
-                  <!--ログイン時： チームトップページ-->
-                  <nav v-else class="flex items-center gap-4">
-                    <NuxtLink to="/team_top" class="text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">MatchMate</NuxtLink>
-                  </nav>
+                <!--未ログイン時： トップページ-->
+                <NuxtLink v-if="!displayIsLoggedIn" to="/" class="text-xl sm:text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
+                  MatchMate
+                </NuxtLink>
+                <!--ログイン時： チームトップページ-->
+                <NuxtLink v-else to="/team_top" class="text-xl sm:text-2xl font-bold text-gray-900 hover:text-gray-700 transition-colors">
+                  MatchMate
+                </NuxtLink>
               </div>
               
               <!-- 未ログイン時：ログイン・新規登録ボタン -->
-              <div v-if="!displayIsLoggedIn" class="flex gap-3">
-                <NuxtLink to="/login" class="px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              <div v-if="!displayIsLoggedIn" class="flex gap-2 sm:gap-3">
+                <NuxtLink to="/login" class="px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base text-gray-700 font-medium hover:text-gray-900 transition text-center">
                   ログイン
                 </NuxtLink>
-                <NuxtLink to="/register" class="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors">
+                <NuxtLink to="/register" class="px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition text-center">
                   新規登録
                 </NuxtLink>
               </div>
               
               <!-- ログイン時：メニューバー（ロールに応じて表示） -->
-              <nav v-else class="flex items-center gap-4">
-                <!-- team_select.vue の場合：ログアウトのみ -->
-                <template v-if="route.path === '/team_select'">
-                  <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
-                    ログアウト
-                  </button>
-                </template>
+              <div v-else class="flex items-center gap-2 sm:gap-4">
+                <!-- ハンバーガーメニューボタン（スマホのみ） -->
+                <button v-if="isPlayer || isManager" @click="isMenuOpen = !isMenuOpen" class="sm:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  <svg v-if="!isMenuOpen" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  <svg v-else class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
                 
-                <!-- 選手用メニュー -->
-                <template v-else-if="isPlayer">
-                  <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    スケジュール
-                  </NuxtLink>
-                  <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    プロフィール
-                  </NuxtLink>
-                  <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
-                    ログアウト
-                  </button>
-                </template>
-                
-                <!-- 監督用メニュー -->
-                <template v-else-if="isManager">
-                  <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    スケジュール
-                  </NuxtLink>
-                  <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    プロフィール
-                  </NuxtLink>
-                  <NuxtLink to="/team_info" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
-                    チーム・選手管理
-                  </NuxtLink>
-                  <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
-                    ログアウト
-                  </button>
-                </template>
-              </nav>
+                <!-- デスクトップ用メニュー（スマホでは非表示） -->
+                <nav class="hidden sm:flex items-center gap-4">
+                  <!-- 特定ページでログアウトのみ表示 -->
+                  <template v-if="route.path === '/team_select' || route.path === '/team_join' || route.path === '/manager/teams/create'">
+                    <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                      ログアウト
+                    </button>
+                  </template>
+                  
+                  <!-- 選手用メニュー -->
+                  <template v-else-if="isPlayer">
+                    <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                      スケジュール
+                    </NuxtLink>
+                    <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                      プロフィール
+                    </NuxtLink>
+                    <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                      ログアウト
+                    </button>
+                  </template>
+                  
+                  <!-- 監督用メニュー -->
+                  <template v-else-if="isManager">
+                    <NuxtLink to="/schedule" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                      スケジュール
+                    </NuxtLink>
+                    <NuxtLink to="/profile" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                      プロフィール
+                    </NuxtLink>
+                    <NuxtLink to="/team_info" class="px-3 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                      チーム・選手管理
+                    </NuxtLink>
+                    <button @click="handleLogout" class="px-3 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                      ログアウト
+                    </button>
+                  </template>
+                </nav>
+              </div>
             </div>
           </header>
           
-          <!-- ヘッダー分のスペース確保 -->
-          <div class="h-[72px]"></div>
+          <!-- スマホ用ドロップダウンメニュー -->
+          <div v-if="isMenuOpen && displayIsLoggedIn" class="fixed top-[60px] left-0 right-0 bg-white border-b border-gray-200 shadow-md z-40 sm:hidden">
+            <div class="px-4 py-4 space-y-2">
+              <!-- 特定ページでログアウトのみ表示 -->
+              <template v-if="route.path === '/team_select' || route.path === '/team_join' || route.path === '/manager/teams/create'">
+                <button @click="handleLogout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                  ログアウト
+                </button>
+              </template>
+              
+              <!-- 選手用メニュー -->
+              <template v-else-if="isPlayer">
+                <NuxtLink to="/schedule" @click="closeMenu" class="block px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  スケジュール
+                </NuxtLink>
+                <NuxtLink to="/profile" @click="closeMenu" class="block px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  プロフィール
+                </NuxtLink>
+                <button @click="handleLogout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                  ログアウト
+                </button>
+              </template>
+              
+              <!-- 監督用メニュー -->
+              <template v-else-if="isManager">
+                <NuxtLink to="/schedule" @click="closeMenu" class="block px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  スケジュール
+                </NuxtLink>
+                <NuxtLink to="/profile" @click="closeMenu" class="block px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  プロフィール
+                </NuxtLink>
+                <NuxtLink to="/team_info" @click="closeMenu" class="block px-4 py-2 text-sm text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+                  チーム・選手管理
+                </NuxtLink>
+                <button @click="handleLogout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors">
+                  ログアウト
+                </button>
+              </template>
+            </div>
+          </div>
+          
+          <!-- ハンバーガーメニュー開閉時のスペース調整 -->
+          <div class="h-[60px] sm:h-[72px]"></div>
           
           <div class="relative z-10 flex-1 flex flex-col">
             <slot />
@@ -170,15 +232,13 @@
                 <!-- ロゴとキャッチコピー -->
                 <div>
                   <div class="flex items-center gap-2 mb-4">
-                    <div class="w-8 h-8 bg-white rounded flex items-center justify-center">
-                      <svg class="w-5 h-5 text-gray-900" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M3 4a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V4zM3 12a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H4a1 1 0 01-1-1v-4zm8 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/>
-                      </svg>
+                    <div class="w-10 h-10">
+                      <img src="@/assets/images/logo.png" alt="MatchMate" class="w-full h-full object-contain" />
                     </div>
                     <span class="text-xl font-bold">MatchMate</span>
                   </div>
                   <p class="text-gray-400 text-sm">
-                    サッカーの試合を簡単に見つけて、つながろう
+                    サッカーの試合でチームメイトとつながろう！
                   </p>
                 </div>
   
