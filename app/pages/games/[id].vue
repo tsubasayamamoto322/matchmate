@@ -79,6 +79,10 @@
                                     class="w-full sm:flex-1 px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium">
                                     キャンセル
                                 </button>
+                                <button type="button" @click="deleteMatch" :disabled="isDeletingMatch"
+                                    class="w-full sm:flex-1 px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                                    {{ isDeletingMatch ? '削除中...' : '削除' }}
+                                </button>
                                 <button type="submit" :disabled="isSavingMatch"
                                     class="w-full sm:flex-1 px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed">
                                     {{ isSavingMatch ? '保存中...' : '保存' }}
@@ -236,6 +240,7 @@ const attendanceError = ref<string | null>(null)
 const isEditingMatch = ref(false)
 const isSavingMatch = ref(false)
 const editError = ref<string | null>(null)
+const isDeletingMatch = ref(false)
 const editFormData = ref({
     opponent_team: '',
     game_date: '',
@@ -458,6 +463,55 @@ const saveMatch = async () => {
         editError.value = '試合情報の更新中にエラーが発生しました'
     } finally {
         isSavingMatch.value = false
+    }
+}
+
+// 試合を削除
+const deleteMatch = async () => {
+    if (!match.value) return
+    
+    // 削除確認
+    if (!confirm(`${match.value.opponent_team}との試合を削除してもよろしいですか？\n関連する出欠情報もすべて削除されます。`)) {
+        return
+    }
+
+    isDeletingMatch.value = true
+    editError.value = null
+
+    try {
+        const matchId = route.params.id as string
+
+        // 1. 試合に関連するattendanceデータを削除
+        const { error: deleteAttendanceError } = await supabase
+            .from('attendances')
+            .delete()
+            .eq('game_id', matchId)
+
+        if (deleteAttendanceError) {
+            console.error('Error deleting attendances:', deleteAttendanceError)
+            editError.value = '出欠情報の削除に失敗しました'
+            return
+        }
+
+        // 2. 試合データを削除
+        const { error: deleteMatchError } = await supabase
+            .from('games')
+            .delete()
+            .eq('id', matchId)
+
+        if (deleteMatchError) {
+            console.error('Error deleting match:', deleteMatchError)
+            editError.value = '試合の削除に失敗しました'
+            return
+        }
+
+        // チームトップページにリダイレクト
+        await navigateTo('/team_top')
+    } catch (err) {
+        console.error('Error:', err)
+        editError.value = '試合の削除中にエラーが発生しました'
+    } finally {
+        isDeletingMatch.value = false
     }
 }
 
