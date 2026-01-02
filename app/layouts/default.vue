@@ -238,7 +238,7 @@
                     <span class="text-xl font-bold">MatchMate</span>
                   </div>
                   <p class="text-gray-400 text-sm">
-                    サッカーの試合を簡単に見つけて、つながろう
+                    サッカーの試合でチームメイトとつながろう！
                   </p>
                 </div>
   
