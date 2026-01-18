@@ -114,11 +114,12 @@ export const useUserRole = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         clearCache()
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        // 認証状態が変わったらキャッシュをクリアして再取得
+      } else if (event === 'SIGNED_IN') {
+        // ログイン時のみキャッシュをクリアして再取得
         clearCache()
         fetchUserRole()
       }
+      // TOKEN_REFRESHED では何もしない（無限ループを防ぐため）
     })
     
     // アンマウント時にリスナーを解除

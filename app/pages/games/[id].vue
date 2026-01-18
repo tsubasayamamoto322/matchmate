@@ -176,6 +176,56 @@
 
                 </div>
 
+                <!-- ポジション設定セクション（監督のみ） -->
+                <div v-if="isManager" class="bg-white rounded-xl shadow-lg p-4 sm:p-8 mb-6 sm:mb-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-base sm:text-lg font-bold text-gray-900">ポジション設定</h2>
+                        <button
+                            v-if="!isEditingPositions"
+                            @click="startEditPositions"
+                            class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-lg flex items-center gap-2"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                            ポジションを設定
+                        </button>
+                    </div>
+
+                    <!-- ポジション設定マネージャー -->
+                    <PositionManager
+                        v-if="isEditingPositions"
+                        :game-id="route.params.id as string"
+                        :players="participatingPlayers"
+                        :editable="true"
+                        @close="closePositionEditor"
+                        @saved="handlePositionsSaved"
+                    />
+
+                    <!-- ポジション表示（閲覧モード） -->
+                    <div v-else-if="participatingPlayers.length > 0">
+                        <p class="text-sm text-gray-600 mb-4">出席する選手のポジションを設定できます</p>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            <div
+                                v-for="player in participatingPlayers"
+                                :key="player.player_id"
+                                class="p-3 border border-gray-200 rounded-lg"
+                            >
+                                <p class="text-sm font-medium text-gray-900">{{ player.user_name }}</p>
+                                <p class="text-xs text-gray-600">
+                                    {{ player.position_name || '未設定' }}
+                                    <span v-if="player.roster_status" class="ml-1">
+                                        ({{ player.roster_status === 'starter' ? 'スタメン' : 'サブ' }})
+                                    </span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div v-else class="text-center py-8 text-gray-500">
+                        <p class="text-sm">出席する選手がいません</p>
+                    </div>
+                </div>
+
                 <!-- 出欠状況セクション -->
                 <div class="bg-white rounded-xl shadow-lg p-4 sm:p-8">
                     <h2 class="text-base sm:text-lg font-bold text-gray-900 mb-4 sm:mb-6">チーム内の出欠状況</h2>
@@ -220,6 +270,7 @@
 
 <script setup lang="ts">
 import { createClient } from '@supabase/supabase-js'
+import PositionManager from '@/components/PositionManager.vue'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -248,6 +299,13 @@ const editFormData = ref({
     location: '',
     notes: ''
 })
+
+// ポジション設定用
+const isEditingPositions = ref(false)
+const participatingPlayers = ref<any[]>([])
+const selectedFormation = ref('4-4-2')
+const playerPositions = ref<Map<string, any>>(new Map())
+const availablePositions = ref<any[]>([])
 
 // 試合情報を取得
 const fetchMatch = async () => {
@@ -295,13 +353,18 @@ const fetchAttendances = async () => {
 
             const memberIds = teamMembers.map((m: any) => m.player_id)
             
-            // メンバーの出欠情報を取得
+            // メンバーの出欠情報を取得（ポジション情報も含む）
             const { data: attendances, error: attendanceError } = await supabase
                 .from('attendances')
                 .select(`
                     player_id,
                     status,
-                    users!left(id, user_name, avatar_url)
+                    position_id,
+                    field_x,
+                    field_y,
+                    roster_status,
+                    users!left(id, user_name, avatar_url),
+                    positions!left(id, name)
                 `)
                 .eq('game_id', matchId)
                 .in('player_id', memberIds)
@@ -319,10 +382,18 @@ const fetchAttendances = async () => {
                         player_id: att.player_id,
                         status: att.status,
                         user_name: att.users.user_name,
-                        avatar_url: att.users.avatar_url
+                        avatar_url: att.users.avatar_url,
+                        position_id: att.position_id,
+                        position_name: att.positions?.name || null,
+                        field_x: att.field_x,
+                        field_y: att.field_y,
+                        roster_status: att.roster_status
                     }))
 
                 attendanceList.value = formatted
+                
+                // 出席する選手のみを抽出（ポジション設定用）
+                participatingPlayers.value = formatted.filter((att: any) => att.status === 'participate')
             }
         } else {
             // 選手の場合：通常の出欠情報取得
@@ -513,6 +584,46 @@ const deleteMatch = async () => {
     } finally {
         isDeletingMatch.value = false
     }
+}
+
+// ポジション設定を開始
+const startEditPositions = async () => {
+    // ポジションマスタを取得
+    await fetchPositions()
+    // ポジション編集モードを開始
+    isEditingPositions.value = true
+}
+
+// ポジション設定を終了
+const closePositionEditor = () => {
+    isEditingPositions.value = false
+}
+
+// ポジションマスタを取得
+const fetchPositions = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('positions')
+            .select('*')
+        
+        if (error) {
+            console.error('Error fetching positions:', error)
+            return
+        }
+        
+        availablePositions.value = data || []
+    } catch (err) {
+        console.error('Error:', err)
+    }
+}
+
+// ポジション設定が保存された
+const handlePositionsSaved = async () => {
+    // 先にポジション設定モードを終了（コンポーネントをアンマウント）
+    isEditingPositions.value = false
+    
+    // 出欠情報を再取得してポジション情報を更新
+    await fetchAttendances()
 }
 
 // ステータスのクラス
