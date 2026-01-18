@@ -3,29 +3,29 @@
     <!-- メインコンテンツ -->
     <main class="w-full">
       <!-- ヒーロー セクション -->
-      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <!-- 左側: テキスト -->
-          <div>
+          <div class="order-2 lg:order-1">
             <h1
-              class="text-4xl sm:text-5xl font-bold text-gray-900 mb-6 leading-tight"
+              class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 leading-tight"
             >
               ワクワクする最高の<br />スポーツライフを
             </h1>
-            <p class="text-lg text-gray-600 mb-8 leading-relaxed">
+            <p class="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 leading-relaxed">
               MatchMateはスポーツを楽しむすべてのチームにおくるチーム活動アプリです。<br />
               試合スケジュール管理から出欠確認、選手のポジション決定までワンストップで実現します。
             </p>
-            <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <NuxtLink
                 to="register"
-                class="px-8 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition text-center"
+                class="px-6 sm:px-8 py-3 bg-green-500 text-white font-semibold rounded-lg hover:bg-green-600 transition text-center text-sm sm:text-base"
               >
                 無料で登録する
               </NuxtLink>
               <a
                 href="#features"
-                class="px-8 py-3 border-2 border-green-500 text-green-500 font-semibold rounded-lg hover:bg-green-50 transition text-center"
+                class="px-6 sm:px-8 py-3 border-2 border-green-500 text-green-500 font-semibold rounded-lg hover:bg-green-50 transition text-center text-sm sm:text-base"
               >
                 詳しく見る
               </a>
@@ -33,42 +33,16 @@
           </div>
 
           <!-- 右側: ビジュアル -->
-          <div class="relative">
+          <div class="relative order-1 lg:order-2">
             <div
-              class="bg-gradient-to-b from-green-50 to-green-100 rounded-2xl p-8 h-96 flex items-center justify-center overflow-hidden"
+              class="rounded-lg sm:rounded-2xl overflow-hidden shadow-lg sm:shadow-2xl"
             >
-              <!-- サッカーフィールド -->
-              <div
-                class="w-full h-full relative bg-gradient-to-b from-green-400 via-green-500 to-green-600 rounded-lg overflow-hidden flex items-center justify-center"
-              >
-                <!-- 芝生のストライプ -->
-                <div
-                  class="absolute inset-0 opacity-20"
-                  :style="{
-                    backgroundImage:
-                      'repeating-linear-gradient(90deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 60px, transparent 60px, transparent 120px)',
-                  }"
-                />
-
-                <!-- フィールド要素 -->
-                <div
-                  class="absolute left-1/2 top-0 bottom-0 w-0.5 bg-white opacity-70 -translate-x-1/2"
-                />
-                <div
-                  class="absolute left-1/2 top-1/2 w-24 h-24 border-3 border-white opacity-70 rounded-full -translate-x-1/2 -translate-y-1/2"
-                />
-                <div
-                  class="absolute left-1/2 top-1/2 w-2 h-2 bg-white opacity-70 rounded-full -translate-x-1/2 -translate-y-1/2"
-                />
-
-                <!-- ボール -->
-                <div
-                  class="relative z-10 text-7xl animate-bounce"
-                  style="animation-duration: 2s"
-                >
-                  ⚽
-                </div>
-              </div>
+              <!-- プレイヤー画像 -->
+              <img
+                src="@/assets/images/playerImage.webp"
+                alt="サッカー選手"
+                class="w-full h-auto object-cover"
+              />
             </div>
           </div>
         </div>
