@@ -181,7 +181,7 @@
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-base sm:text-lg font-bold text-gray-900">ポジション設定</h2>
                         <button
-                            v-if="!isEditingPositions"
+                            v-if="!isPositionManagerEditMode"
                             @click="startEditPositions"
                             class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-lg flex items-center gap-2"
                         >
@@ -194,33 +194,15 @@
 
                     <!-- ポジション設定マネージャー -->
                     <PositionManager
-                        v-if="isEditingPositions"
+                        v-if="participatingPlayers.length > 0"
                         :game-id="route.params.id as string"
                         :players="participatingPlayers"
-                        :editable="true"
+                        :available-positions="availablePositions"
                         @close="closePositionEditor"
                         @saved="handlePositionsSaved"
+                        @edit-mode-changed="isPositionManagerEditMode = $event"
+                        ref="positionManager"
                     />
-
-                    <!-- ポジション表示（閲覧モード） -->
-                    <div v-else-if="participatingPlayers.length > 0">
-                        <p class="text-sm text-gray-600 mb-4">出席する選手のポジションを設定できます</p>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                            <div
-                                v-for="player in participatingPlayers"
-                                :key="player.player_id"
-                                class="p-3 border border-gray-200 rounded-lg"
-                            >
-                                <p class="text-sm font-medium text-gray-900">{{ player.user_name }}</p>
-                                <p class="text-xs text-gray-600">
-                                    {{ player.position_name || '未設定' }}
-                                    <span v-if="player.roster_status" class="ml-1">
-                                        ({{ player.roster_status === 'starter' ? 'スタメン' : 'サブ' }})
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
                     <div v-else class="text-center py-8 text-gray-500">
                         <p class="text-sm">出席する選手がいません</p>
                     </div>
@@ -301,11 +283,12 @@ const editFormData = ref({
 })
 
 // ポジション設定用
-const isEditingPositions = ref(false)
 const participatingPlayers = ref<any[]>([])
 const selectedFormation = ref('4-4-2')
 const playerPositions = ref<Map<string, any>>(new Map())
 const availablePositions = ref<any[]>([])
+const positionManager = ref<any>(null)
+const isPositionManagerEditMode = ref(false)
 
 // 試合情報を取得
 const fetchMatch = async () => {
@@ -588,15 +571,15 @@ const deleteMatch = async () => {
 
 // ポジション設定を開始
 const startEditPositions = async () => {
-    // ポジションマスタを取得
-    await fetchPositions()
-    // ポジション編集モードを開始
-    isEditingPositions.value = true
+    // ポジション編集モードを開始（PositionManagerコンポーネント内で制御）
+    if (positionManager.value && typeof positionManager.value.startEdit === 'function') {
+        positionManager.value.startEdit()
+    }
 }
 
 // ポジション設定を終了
 const closePositionEditor = () => {
-    isEditingPositions.value = false
+    // 特に処理は不要（コンポーネント内で状態管理）
 }
 
 // ポジションマスタを取得
@@ -619,9 +602,6 @@ const fetchPositions = async () => {
 
 // ポジション設定が保存された
 const handlePositionsSaved = async () => {
-    // 先にポジション設定モードを終了（コンポーネントをアンマウント）
-    isEditingPositions.value = false
-    
     // 出欠情報を再取得してポジション情報を更新
     await fetchAttendances()
 }
@@ -684,6 +664,7 @@ onMounted(async () => {
     await fetchUserRole()
     await fetchMatch()
     await fetchAttendances()
+    await fetchPositions()
 })
 
 useHead({
