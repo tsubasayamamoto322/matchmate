@@ -90,19 +90,14 @@
       ></div>
     </div>
 
-    <!-- フィールド説明 -->
-    <div class="mt-2 text-xs text-gray-600 text-center">
-      {{ editable ? '選手をドラッグしてフィールド上に配置してください' : 'フィールド配置' }}
-    </div>
-
     <!-- ポジション変更モーダル -->
     <div
       v-if="props.selectedPlayerIdForPositionEdit"
-      class="absolute inset-0 bg-opacity-10 backdrop-blur flex items-center justify-center z-50 rounded-lg"
+      class="fixed inset-0 bg-opacity-10 backdrop-blur flex items-center justify-center z-50"
       @click="emit('closePositionModal')"
     >
       <div
-        class="bg-white rounded-lg shadow-2xl p-8 w-11/12 max-w-2xl"
+        class="bg-white rounded-lg shadow-2xl p-6 sm:p-8 w-11/12 max-w-2xl max-h-[90vh] overflow-y-auto"
         @click.stop
       >
         <h3 class="text-2xl font-bold text-gray-900 mb-6">
@@ -204,8 +199,8 @@ const fieldStyle = computed(() => {
   return {
     width: '100%',
     maxWidth: `${fieldWidth}px`,
-    aspectRatio: '1 / 1.5',
-    minHeight: '400px'
+    aspectRatio: '1 / 1.3',
+    minHeight: '350px'
   }
 })
 
