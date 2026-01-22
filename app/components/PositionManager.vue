@@ -1,11 +1,10 @@
 <template>
   <div class="position-manager">
-    <!-- ヘッダー -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
+    <!-- ヘッダー（編集モード時のみ） -->
+    <div v-if="isEditMode" class="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-3">
       <h2 class="text-xl sm:text-2xl font-bold text-gray-900">ポジション設定</h2>
       <div class="flex gap-2">
         <button
-          v-if="editable"
           @click="handleSave"
           :disabled="isSaving"
           class="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -13,10 +12,10 @@
           {{ isSaving ? '保存中...' : '保存' }}
         </button>
         <button
-          @click="emit('close')"
+          @click="cancelEdit"
           class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          {{ editable ? 'キャンセル' : '閉じる' }}
+          キャンセル
         </button>
       </div>
     </div>
@@ -31,17 +30,17 @@
       {{ successMessage }}
     </div>
 
-    <!-- フォーメーション選択 -->
-    <div class="mb-6">
+    <!-- フォーメーション選択（編集モード時のみ） -->
+    <div v-if="isEditMode" class="mb-6">
       <FormationSelector
         v-model="selectedFormation"
-        :editable="editable"
+        :editable="true"
         @apply="applyFormation"
       />
     </div>
 
-    <!-- 編集モード選択 -->
-    <div v-if="editable" class="mb-6 flex gap-3">
+    <!-- 編集モード選択（編集モード時のみ） -->
+    <div v-if="isEditMode" class="mb-6 flex gap-3">
       <label class="flex items-center gap-2 cursor-pointer">
         <input
           type="radio"
@@ -68,8 +67,8 @@
       <div class="lg:col-span-2">
         <SoccerField
           :placed-players="placedPlayers"
-          :empty-positions="emptyPositions"
-          :editable="editable"
+          :empty-positions="isEditMode ? emptyPositions : []"
+          :editable="isEditMode"
           :edit-mode="editMode"
           :selected-player-id="selectedPlayerForSwap"
           :selected-player-id-for-position-edit="selectedPlayerIdForPositionEdit"
@@ -81,44 +80,36 @@
           @position-edit-request="selectedPlayerIdForPositionEdit = $event"
           @close-position-modal="selectedPlayerIdForPositionEdit = null"
         />
-
-        <!-- スタメン人数カウンター -->
-        <div class="mt-4 p-3 bg-white rounded-lg shadow">
-          <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-gray-700">スタメン人数:</span>
-            <span :class="[
-              'text-lg font-bold',
-              starterCount > 11 ? 'text-red-600' : starterCount === 11 ? 'text-green-600' : 'text-gray-900'
-            ]">
-              {{ starterCount }} / 11
-            </span>
-          </div>
-          <div v-if="starterCount > 11" class="mt-2 text-xs text-red-600">
-            ⚠️ スタメンは最大11人までです
-          </div>
-        </div>
       </div>
 
       <!-- 選手リスト -->
       <div class="lg:col-span-1">
+        <!-- 未配置選手リスト（未配置選手がいる場合のみ表示） -->
         <PlayerList
+          v-if="unplacedPlayers.length > 0"
           :players="unplacedPlayers"
-          :editable="editable"
+          :editable="isEditMode"
+          :edit-mode="editMode"
+          :selected-player-id="selectedPlayerForSwap"
           title="未配置選手"
           empty-message="すべての選手が配置されています"
           @toggle-roster-status="toggleRosterStatus"
+          @player-selected="handlePlayerSelected"
         />
 
         <!-- 控え選手リスト -->
-        <div v-if="substitutePlayers.length > 0" class="mt-4">
-          <PlayerList
-            :players="substitutePlayers"
-            :editable="editable"
-            title="控え選手"
-            empty-message="控え選手はいません"
-            @toggle-roster-status="toggleRosterStatus"
-          />
-        </div>
+        <PlayerList
+          v-if="substitutePlayers.length > 0"
+          :class="{ 'mt-4': unplacedPlayers.length > 0 }"
+          :players="substitutePlayers"
+          :editable="isEditMode"
+          :edit-mode="editMode"
+          :selected-player-id="selectedPlayerForSwap"
+          title="控え選手"
+          empty-message="控え選手はいません"
+          @toggle-roster-status="toggleRosterStatus"
+          @player-selected="handlePlayerSelected"
+        />
       </div>
     </div>
   </div>
@@ -143,25 +134,32 @@ interface Player {
   status: string
 }
 
+interface Position {
+  id: number
+  name: string
+}
+
 interface Props {
   gameId: string
   players: Player[]
-  editable?: boolean
+  availablePositions?: Position[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  editable: true
+  availablePositions: () => []
 })
 
 const emit = defineEmits<{
   close: []
   saved: []
+  'edit-mode-changed': [isEditing: boolean]
 }>()
 
 const supabase = useSupabaseClient()
 const { getFormation } = useFormations()
 
 // 状態管理
+const isEditMode = ref(false)
 const selectedFormation = ref('4-4-2')
 const playerPositions = ref<Map<string, Player>>(new Map())
 const isSaving = ref(false)
@@ -170,6 +168,19 @@ const successMessage = ref<string | null>(null)
 const editMode = ref<'drag' | 'swap'>('swap')
 const selectedPlayerForSwap = ref<string | null>(null)
 const selectedPlayerIdForPositionEdit = ref<string | null>(null)
+const playerPositionsBackup = ref<Map<string, Player>>(new Map())
+
+// 編集モード変更時に親に通知
+watch(isEditMode, (newValue) => {
+  emit('edit-mode-changed', newValue)
+})
+
+// position_idからポジション名を取得
+const getPositionNameById = (positionId: number | null): string | null => {
+  if (!positionId) return null
+  const position = props.availablePositions.find(p => p.id === positionId)
+  return position ? position.name : null
+}
 
 // 初期化（マウント時のみ）
 onMounted(() => {
@@ -182,6 +193,25 @@ onMounted(() => {
     }
     playerPositions.value.set(player.player_id, initializedPlayer)
   })
+
+  // 12人出席の場合、最後の1人をサブに自動設定
+  // ただし、全員のroster_statusがnullの場合のみ（初回設定時のみ）
+  const participatingPlayers = Array.from(playerPositions.value.values())
+    .filter(player => player.status === 'participate')
+  
+  const allRosterStatusNull = participatingPlayers.every(player => 
+    props.players.find(p => p.player_id === player.player_id)?.roster_status === null
+  )
+  
+  if (participatingPlayers.length === 12 && allRosterStatusNull) {
+    // 最後の選手をサブに設定
+    const lastPlayer = participatingPlayers[participatingPlayers.length - 1]
+    if (lastPlayer) {
+      lastPlayer.roster_status = 'sub'
+      lastPlayer.field_x = null
+      lastPlayer.field_y = null
+    }
+  }
 })
 
 // 配置済み選手（フィールド上に表示）
@@ -233,7 +263,7 @@ const emptyPositions = computed(() => {
       id: `empty-${idx}`,
       x: pos.x,
       y: pos.y,
-      positionName: pos.positionName
+      positionName: getPositionNameById(pos.position_id) || ''
     }))
 })
 
@@ -265,7 +295,8 @@ const applyFormation = (formationName: string) => {
         if (updatedPlayer) {
           updatedPlayer.field_x = pos.x
           updatedPlayer.field_y = pos.y
-          updatedPlayer.position_name = pos.positionName
+          updatedPlayer.position_id = pos.position_id
+          updatedPlayer.position_name = getPositionNameById(pos.position_id)
         }
       }
     }
@@ -321,21 +352,47 @@ const handlePlayerSelected = (playerId: string) => {
     return
   }
   
-  // 座標を交換
-  const tempX = firstPlayer.field_x
-  const tempY = firstPlayer.field_y
-  const tempPositionId = firstPlayer.position_id
-  const tempPositionName = firstPlayer.position_name
+  // フィールド選手と控え選手の交換の場合
+  const firstIsOnField = firstPlayer.roster_status === 'starter' && firstPlayer.field_x != null
+  const secondIsOnField = secondPlayer.roster_status === 'starter' && secondPlayer.field_x != null
+  const firstIsSub = firstPlayer.roster_status === 'sub'
+  const secondIsSub = secondPlayer.roster_status === 'sub'
   
-  firstPlayer.field_x = secondPlayer.field_x
-  firstPlayer.field_y = secondPlayer.field_y
-  firstPlayer.position_id = secondPlayer.position_id
-  firstPlayer.position_name = secondPlayer.position_name
-  
-  secondPlayer.field_x = tempX
-  secondPlayer.field_y = tempY
-  secondPlayer.position_id = tempPositionId
-  secondPlayer.position_name = tempPositionName
+  if ((firstIsOnField && secondIsSub) || (firstIsSub && secondIsOnField)) {
+    // フィールド選手と控え選手の入れ替え
+    const fieldPlayer = firstIsOnField ? firstPlayer : secondPlayer
+    const subPlayer = firstIsSub ? firstPlayer : secondPlayer
+    
+    // 控え選手をフィールドに配置
+    subPlayer.field_x = fieldPlayer.field_x
+    subPlayer.field_y = fieldPlayer.field_y
+    subPlayer.position_id = fieldPlayer.position_id
+    subPlayer.position_name = fieldPlayer.position_name
+    subPlayer.roster_status = 'starter'
+    
+    // フィールド選手を控えに移動
+    fieldPlayer.field_x = null
+    fieldPlayer.field_y = null
+    fieldPlayer.position_id = null
+    fieldPlayer.position_name = null
+    fieldPlayer.roster_status = 'sub'
+  } else {
+    // フィールド選手同士の交換
+    const tempX = firstPlayer.field_x
+    const tempY = firstPlayer.field_y
+    const tempPositionId = firstPlayer.position_id
+    const tempPositionName = firstPlayer.position_name
+    
+    firstPlayer.field_x = secondPlayer.field_x
+    firstPlayer.field_y = secondPlayer.field_y
+    firstPlayer.position_id = secondPlayer.position_id
+    firstPlayer.position_name = secondPlayer.position_name
+    
+    secondPlayer.field_x = tempX
+    secondPlayer.field_y = tempY
+    secondPlayer.position_id = tempPositionId
+    secondPlayer.position_name = tempPositionName
+  }
   
   selectedPlayerForSwap.value = null
 }
@@ -372,7 +429,12 @@ const handlePositionChange = (playerId: string, newPositionName: string) => {
   const player = playerPositions.value.get(playerId)
   if (!player) return
   
-  player.position_name = newPositionName
+  // ポジション名からIDを取得
+  const position = props.availablePositions.find(p => p.name === newPositionName)
+  if (position) {
+    player.position_id = position.id
+    player.position_name = position.name
+  }
 }
 
 // スタメン/サブの切り替え
@@ -387,16 +449,32 @@ const toggleRosterStatus = (playerId: string) => {
     player.field_x = null
     player.field_y = null
   } else {
-    // サブ → スタメン
-    if (starterCount.value >= 11) {
-      error.value = 'スタメンは最大11人までです'
-      setTimeout(() => {
-        error.value = null
-      }, 3000)
-      return
-    }
+    // サブ → スタメン（フィールドには未配置）
     player.roster_status = 'starter'
   }
+}
+
+// 編集モード開始
+const startEdit = () => {
+  isEditMode.value = true
+  // 現在の状態をバックアップ（キャンセル時用）
+  playerPositionsBackup.value = new Map(
+    Array.from(playerPositions.value.entries()).map(([key, player]) => [
+      key,
+      { ...player }
+    ])
+  )
+}
+
+// 編集モード終了（キャンセル）
+const cancelEdit = () => {
+  // バックアップから復元
+  playerPositions.value = playerPositionsBackup.value
+  playerPositionsBackup.value = new Map()
+  isEditMode.value = false
+  error.value = null
+  selectedPlayerForSwap.value = null
+  selectedPlayerIdForPositionEdit.value = null
 }
 
 // 保存処理
@@ -406,9 +484,9 @@ const handleSave = async () => {
   successMessage.value = null
 
   try {
-    // バリデーション
-    if (starterCount.value > 11) {
-      error.value = 'スタメンは最大11人までです'
+    // バリデーション：フィールドに配置されている選手が11人を超えていないかチェック
+    if (placedPlayers.value.length > 11) {
+      error.value = 'フィールドに配置できるのは最大11人までです'
       isSaving.value = false
       return
     }
@@ -438,6 +516,8 @@ const handleSave = async () => {
     }
 
     successMessage.value = 'ポジション情報を保存しました'
+    isEditMode.value = false
+    playerPositionsBackup.value = new Map()
     emit('saved')
 
     setTimeout(() => {
@@ -450,6 +530,12 @@ const handleSave = async () => {
     isSaving.value = false
   }
 }
+
+// 外部から呼び出し可能なメソッドをexpose
+defineExpose({
+  startEdit,
+  cancelEdit
+})
 </script>
 
 <style scoped>
