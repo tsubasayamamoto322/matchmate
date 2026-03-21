@@ -1,13 +1,13 @@
 # 6. API設計
 
 ## 6.1 API設計概要
-
-MatchMateはSupabaseをBaaSとして使用しているため、従来のREST APIではなく、Supabaseクライアントライブラリを通じたデータアクセスを行います。
+Supabaseクライアントライブラリを通じたデータアクセスを実施。
 
 ### アクセスパターン
 
 ```mermaid
 graph LR
+    %%{init: {'theme': 'neutral'}}%%
     subgraph Client[クライアント]
         Vue[Vue Components]
         Composables[Composables]
@@ -33,6 +33,7 @@ graph LR
 
 ```mermaid
 sequenceDiagram
+  %%{init: {'theme': 'neutral'}}%%
     participant Client
     participant Auth as Supabase Auth
     participant DB as Database
@@ -305,6 +306,7 @@ const { error: deleteError } = await supabase
 
 ```mermaid
 sequenceDiagram
+  %%{init: {'theme': 'neutral'}}%%
     participant Client
     participant Games as games テーブル
     participant Members as team_members テーブル
@@ -584,6 +586,7 @@ if (error) {
 
 ```mermaid
 sequenceDiagram
+  %%{init: {'theme': 'neutral'}}%%
     participant Manager as 監督
     participant App as アプリ
     participant DB as Supabase
@@ -616,6 +619,7 @@ sequenceDiagram
 
 ```mermaid
 sequenceDiagram
+%%{init: {'theme': 'neutral'}}%%
     participant Player as 選手
     participant App as アプリ
     participant DB as Supabase
