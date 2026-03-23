@@ -244,7 +244,7 @@
   
                 <!-- リンク -->
                 <div>
-                  <h3 class="font-bold mb-4">サービス</h3>
+                  <h3 class="font-bold mb-4">サービス（準備中）</h3>
                   <ul class="space-y-2 text-sm text-gray-400">
                     <li><NuxtLink to="/about" class="hover:text-white transition-colors">MatchMateとは</NuxtLink></li>
                     <li><NuxtLink to="/features" class="hover:text-white transition-colors">機能紹介</NuxtLink></li>
@@ -254,7 +254,7 @@
   
                 <!-- サポート -->
                 <div>
-                  <h3 class="font-bold mb-4">サポート</h3>
+                  <h3 class="font-bold mb-4">サポート（準備中）</h3>
                   <ul class="space-y-2 text-sm text-gray-400">
                     <li><NuxtLink to="/help" class="hover:text-white transition-colors">ヘルプセンター</NuxtLink></li>
                     <li><NuxtLink to="/terms" class="hover:text-white transition-colors">利用規約</NuxtLink></li>
