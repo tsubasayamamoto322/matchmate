@@ -13,11 +13,11 @@ Laravelで開発した[League-management(Github)](https://github.com/ryousukemiz
 
 ## AIを活用した設計・開発プロセス
 本プロジェクトでは、Cursor/Google Stitchを設計から実装、ドキュメント作成に至る全工程で活用しました。
-1. デザイン・設計フェーズ
+1. デザイン・設計フェーズ  
 実装前にFigmaによるプロトタイプ設計を行い、手戻りを最小限に抑えました。
     - AIによるUI生成: Google Stitchを活用して初期UIを自動生成。Figmaへのエクスポート機能を用い、ブラッシュアップを実施しました。
     - プロトタイピング: Figma上で[画面遷移](https://www.figma.com/design/FpW75e7qIgSGYb4sy7AhcE/%E7%94%BB%E9%9D%A2%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%BB%E9%81%B7%E7%A7%BB?node-id=382-2907)、[DBスキーマ](https://www.figma.com/board/vW3fLwMnMpIVzhX3VzSQmx/DB%E8%A8%AD%E8%A8%88?node-id=0-1)、[APIエンドポイント](https://www.figma.com/design/FpW75e7qIgSGYb4sy7AhcE/%E7%94%BB%E9%9D%A2%E3%83%87%E3%82%B6%E3%82%A4%E3%83%B3%E3%83%BB%E9%81%B7%E7%A7%BB?node-id=382-2907)のドラフトを作成。実装前に全体の整合性を視覚化しました。
-2. 実装フェーズ（Cursor Pro）
+2. 実装フェーズ（Cursor Pro）  
 メインエディタとしてCursorを採用し、以下のプロセスで実装の高速化と精度向上を図りました。
     - 型安全な開発: Supabaseの型定義（TypeScript）に基づき、AIによるコード補完とリファクタリングを繰り返すことで、型安全性を担保した堅牢なコードを記述しました。
     - ドキュメントの逆生成: 実装完了後、ソースコードをCursorに読み込ませることで、実装の実態に即した「生きた設計書」をアウトプット。設計と実装の乖離を防いでいます。
